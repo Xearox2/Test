@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>mBank Quantum 2026</title>
+    <style>
+        :root {
+            --bg-main: #030712;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-inner: rgba(31, 41, 55, 0.5);
+            --text-main: #f9fafb;
+            --text-sub: #9ca3af;
+            --accent-red: #ff0055;
+            --accent-blue: #00f0ff;
+            --accent-purple: #9d00ff;
+            --border-color: rgba(0, 240, 255, 0.15);
+            --border-glow: rgba(0, 240, 255, 0.4);
+            --pointer-x: 50%;
+            --pointer-y: 50%;
+            --card-rotate-x: 0deg;
+            --card-rotate-y: 0deg;
+        }
+
+        body.light-mode {
+            --bg-main: #f0f4f8;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-inner: rgba(238, 242, 246, 0.8);
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border-color: rgba(0, 153, 255, 0.2);
+            --border-glow: rgba(0, 153, 255, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.4s;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200vw;
+            height: 200vh;
+            background-image: 
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.15;
+            z-index: -1;
+            transform: perspective(500px) rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
+        }
+
+        .app-viewport {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 850px;
+            background-color: var(--bg-main);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.15), 0 30px 60px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 420px) {
+            .app-viewport {
+                height: 840px;
+                border-radius: 44px;
+            }
+        }
+
+        /* 1. EKRAN LOGOWANIA */
+        #login-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 35px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .m-logo {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
+        }
+
+        /* INTERAKTYWNY SKANER BIOMETRYCZNY 3D */
+        .face-id-box {
+            width: 96px;
+            height: 96px;
+            border-radius: 32px;
+            background: var(--card-bg);
+            border: 1px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .face-id-box:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 35px rgba(157, 0, 255, 0.4);
+        }
+
+        .face-id-box:active {
+            transform: scale(0.95);
+        }
+
+        /* Laser skanujący siatkówkę / twarz */
+        .face-laser {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--accent-blue);
+            box-shadow: 0 0 12px var(--accent-blue);
+            opacity: 0;
+        }
+
+        .face-id-box.scanning .face-laser {
+            opacity: 1;
+            animation: scanLaser 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes scanLaser {
+            0% { transform: translateY(0); background: var(--accent-blue); box-shadow: 0 0 12px var(--accent-blue); }
+            50% { background: var(--accent-purple); box-shadow: 0 0 15px var(--accent-purple); }
+            100% { transform: translateY(93px); background: var(--accent-red); box-shadow: 0 0 12px var(--accent-red); }
+        }
+
+        .login-input-group {
+            width: 100%;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .login-input-group label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-blue);
+            margin-bottom: 6px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .login-input-group input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: var(--card-inner);
+            color: var(--text-main);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .login-input-group input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-purple));
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.4);
+            margin-top: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+
+        /* 2. EKRAN GŁÓWNY */
+        #app-screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            z-index: 10;
+        }
+
+        .app-header {
+            padding: 20px 24px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .user-info h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.3px; }
+        .user-info p { margin: 2px 0 0; font-size: 10px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 20px 20px;
+            scrollbar-width: none;
+        }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.9), rgba(11, 15, 25, 0.95));
+            border: 1px solid var(--accent-blue);
+            border-radius: 28px;
+            padding: 26px;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .balance-label { font-size: 11px; color: var(--text-sub); margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .balance-val { font-size: 34px; font-weight: 900; margin: 8px 0 18px; color: #fff; letter-spacing: -0.5px; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+
+        .quick-actions { display: flex; gap: 10px; }
+        .action-chip {
+            flex: 1;
+            background: var(--card-inner);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-chip:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .add-card-mobywatel {
+            background: var(--card-bg);
+            border: 2px dashed var(--accent-blue);
+            border-radius: 22px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            margin-bottom: 18px;
+            transition: all 0.2s;
+            box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.05);
+        }
+
+        .add-card-mobywatel:active { transform: scale(0.98); }
+
+        .add-icon-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .add-card-text { font-size: 13px; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; text-transform: uppercase; }
+
+        .card-container { margin-bottom: 16px; perspective: 1000px; }
+
+        .bank-card-graphic {
+            height: 210px;
+            border-radius: 24px;
+            padding: 24px;
+            color: white;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 25px rgba(0, 240, 255, 0.15);
+            border: 1px solid var(--accent-blue);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            transition: transform 0.1s ease-out;
+            background: radial-gradient(circle at 80% 20%, rgba(34, 43, 69, 0.9) 0%, rgba(16, 22, 36, 0.95) 65%, rgba(11, 15, 25, 1) 100%);
+        }
+
+        .card-graphic-header { display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
+        
+        .visa-gold-title {
+            font-size: 16px;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #fff, var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-chip-gold {
+            width: 44px;
+            height: 34px;
+            background: linear-gradient(135deg, #fce07c 0%, #d4af37 100%);
+            border-radius: 6px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 0 10px rgba(212, 175, 55, 0.4);
+            position: relative;
+        }
+        .card-chip-gold::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border: 1px solid rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+
+        .card-masked-number { font-family: monospace; font-size: 19px; letter-spacing: 4px; z-index: 2; color: #fff; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
+
+        .card-graphic-footer { display: flex; justify-content: space-between; align-items: flex-end; z-index: 2; }
+        .card-holder-label { font-size: 9px; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; font-weight: 700; }
+        .card-holder-value { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+
+        .modal-card-visual {
+            height: 180px;
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            position: relative;
+            background: radial-gradient(circle at 80% 20%, #1e293b 0%, #0f172a 70%, #020617 100%);
+            border: 1px solid var(--accent-blue);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .card-hologram-mobywatel {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 56px;
+            height: 38px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #090d16;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0, 240, 255, 0.4);
+            transform: perspective(400px) rotateX(var(--card-rotate-x)) rotateY(var(--card-rotate-y));
+            will-change: transform;
+            z-index: 5;
+        }
+
+        .moby-holo-shine {
+            position: absolute;
+            inset: -150%;
+            background: conic-gradient(
+                from 0deg at 50% 50%,
+                rgba(0, 240, 255, 0.6), rgba(157, 0, 255, 0.6), rgba(255, 0, 85, 0.6), 
+                rgba(0, 240, 255, 0.6)
+            );
+            mix-blend-mode: screen;
+            opacity: 0.85;
+            transform: translate(calc((var(--pointer-x) - 50%) * 0.3%), calc((var(--pointer-y) - 50%) * 0.3%));
+            pointer-events: none;
+            transition: opacity 0.1s;
+        }
+
+        .moby-holo-glare {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at var(--pointer-x) var(--pointer-y), 
+                        rgba(255, 255, 255, 0.9) 0%, 
+                        rgba(0, 240, 255, 0.4) 40%, 
+                        transparent 75%);
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
+        .moby-holo-eagle {
+            width: 24px;
+            height: 24px;
+            fill: #00f0ff;
+            z-index: 2;
+            filter: drop-shadow(0 0 5px rgba(0, 240, 255, 0.8));
+        }
+
+        .gyro-permission-banner {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(157, 0, 255, 0.1));
+            border: 1px solid var(--accent-blue);
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 11px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+        }
+
+        .gyro-btn {
+            background: var(--accent-blue);
+            color: #030712;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 11px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .tx-list {
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            padding: 8px 18px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tx-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tx-item:active { background: rgba(0, 240, 255, 0.03); }
+        .tx-item:last-child { border-bottom: none; }
+        .tx-title { font-size: 13px; font-weight: 700; margin: 0; }
+        .tx-date { font-size: 10px; color: var(--text-sub); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tx-amount { font-size: 13px; font-weight: 800; }
+        .tx-amount.neg { color: var(--accent-red); text-shadow: 0 0 10px rgba(255, 0, 85, 0.3); }
+        .tx-amount.pos { color: #00ff88; text-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .tx-modal-content {
+            background: linear-gradient(180deg, #111827 0%, #0b0f19 100%);
+            border-radius: 32px 32px 0 0;
+            border-top: 1px solid var(--accent-blue);
+            padding: 25px 25px 40px;
+            width: 100%;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            box-shadow: 0 -20px 40px rgba(0, 240, 255, 0.15);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        #add-card-modal {
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-body {
+            background: #111827;
+            border-radius: 28px;
+            border: 1px solid var(--accent-blue);
+            padding: 25px;
+            width: 100%;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
+        }
+
+        .blik-card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            border: 1px solid var(--accent-blue);
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.1);
+        }
+
+        .blik-code-display {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 10px;
+            background: linear-gradient(90deg, var(--accent-red), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: monospace;
+            margin: 20px 0;
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.4));
+        }
+
+        .timer-bar-bg { height: 6px; background: var(--card-inner); border-radius: 3px; overflow: hidden; margin: 15px 0 8px; border: 1px solid var(--border-color); }
+        .timer-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); width: 100%; transition: width 1s linear; box-shadow: 0 0 10px var(--accent-blue); }
+
+        .bottom-nav {
+            height: 75px;
+            background: rgba(17, 24, 39, 0.9);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px 10px;
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-sub);
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active { color: var(--accent-blue); text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .nav-icon { font-size: 22px; }
+    </style>
+</head>
+<body onmousemove="handlePointerMove(event)" ontouchmove="handleTouchMove(event)">
+
+<div class="app-viewport">
+
+    <!-- 1. LOGOWANIE -->
+    <div id="login-screen">
+        <div class="m-logo">mBank // 2026</div>
+        
+        <!-- Działający skaner Biometryczny Face ID / WebAuthn -->
+        <div class="face-id-box" id="faceIdBtn" onclick="triggerBiometricAuth()" title="Kliknij, aby autoryzować biometrycznie">
+            <div class="face-laser"></div>
+            <span>👁️‍🗨️</span>
+        </div>
+
+        <h2 style="margin: 0 0 8px; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">Autoryzacja Quantum</h2>
+        <p id="login-sub-text" style="color: var(--text-sub); font-size: 12px; margin: 0 0 30px; text-transform: uppercase; letter-spacing: 1px;">Kliknij sensor lub użyj klucza systemowego</p>
+
+        <div class="login-input-group" id="pwd-field-group">
+            <label for="pwdInput">Klucz dostępu systemowego</label>
+            <input type="password" id="pwdInput" placeholder="••••••••">
+        </div>
+
+        <button class="btn-primary" id="btn-login-main">Inicjalizuj system</button>
+        <button class="btn-secondary" id="btn-login-bio" style="display: none;" onclick="triggerBiometricAuth()">Skan biometryczny 3D</button>
+        <p id="login-error" style="color: var(--accent-red); font-size: 12px; margin-top: 15px; font-weight: 700;"></p>
+    </div>
+
+    <!-- 2. EKRAN APLIKACJI -->
+    <div id="app-screen">
+
+        <div class="app-header">
+            <div class="user-profile">
+                <div class="avatar">JK</div>
+                <div class="user-info">
+                    <h4>Jan Kowalski</h4>
+                    <p>Quantum Intensive</p>
+                </div>
+            </div>
+            <button onclick="switchView('settings')" style="background:var(--card-inner); border:1px solid var(--accent-blue); width:40px; height:40px; border-radius:12px; color:var(--accent-blue); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 0 15px rgba(0, 240, 255, 0.2);">⚙️</button>
+        </div>
+
+        <div class="content-area">
+
+            <!-- SEKCJA: PULPIT -->
+            <div id="view-home" class="view-section active">
+                <div class="balance-card">
+                    <p class="balance-label">Dostępne środki quantum</p>
+                    <div class="balance-val">14 850,20 PLN</div>
+                    <div class="quick-actions">
+                        <div class="action-chip" onclick="switchView('blik')">📱 BLIK 2.0</div>
+                        <div class="action-chip" onclick="switchView('cards')">💳 Karty 3D</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="font-size:13px; margin:0; text-transform:uppercase; letter-spacing:1px; color:var(--text-sub);">Ostatnia aktywność</h3>
+                </div>
+                <div class="tx-list" id="home-tx-list"></div>
+            </div>
+
+            <!-- SEKCJA: KARTY -->
+            <div id="view-cards" class="view-section">
+                <div class="gyro-permission-banner" id="gyroBanner">
+                    <span>✨ Aktywuj sensor przestrzenny mObywatel</span>
+                    <button class="gyro-btn" onclick="requestGyroAccess()">Włącz żyroskop</button>
+                </div>
+
+                <div class="add-card-mobywatel" onclick="openAddCardModal()">
+                    <div class="add-icon-circle">+</div>
+                    <div class="add-card-text">Wygeneruj nową kartę</div>
+                </div>
+                <div id="cards-wrapper"></div>
+            </div>
+
+            <!-- SEKCJA: BLIK -->
+            <div id="view-blik" class="view-section">
+                <div class="blik-card">
+                    <h3 style="margin:0; font-size:16px; text-transform:uppercase; letter-spacing:1px;">Kod BLIK Quantum</h3>
+                    <p style="font-size:11px; color:var(--text-sub); margin-top:4px; text-transform:uppercase; letter-spacing:0.5px;">Bezpieczna transakcja zbliżeniowa</p>
+                    <div class="blik-code-display" id="blikCode">------</div>
+                    <div style="font-size:11px; color:var(--text-sub); font-weight:700;" id="blikTimerText">Ważny przez: 120s</div>
+                    <div class="timer-bar-bg"><div class="timer-bar-fill" id="blikProgress"></div></div>
+                    <button class="btn-primary" onclick="generateBLIK()" style="margin-top:25px;">Generuj nowy kod</button>
+                </div>
+            </div>
+
+            <!-- SEKCJA: USTAWIENIA -->
+            <div id="view-settings" class="view-section">
+                <h3 style="font-size:13px; margin: 0 0 12px; text-transform:uppercase; letter-spacing:1px; color:var(--text-sub);">System</h3>
+                <div class="tx-list" style="padding: 0 16px; margin-bottom: 20px;">
+                    <div class="tx-item" style="cursor:default;">
+                        <span>Tryb wizualny Matrix (Jasny)</span>
+                        <input type="checkbox" id="themeSwitch" onchange="toggleAppTheme()">
+                    </div>
+                    <div class="tx-item" style="cursor:default;">
+                        <span>Powiadomienia Neural PUSH</span>
+                        <input type="checkbox" checked>
+                    </div>
+                </div>
+
+                <h3 style="font-size:13px; margin: 0 0 12px; text-transform:uppercase; letter-spacing:1px; color:var(--text-sub);">Zarządzanie kartami</h3>
+                <div class="tx-list" id="settings-cards-list" style="padding: 8px 18px; margin-bottom: 20px;"></div>
+
+                <button class="btn-secondary" onclick="logout()" style="border-color: var(--accent-red); color: var(--accent-red); box-shadow: 0 0 15px rgba(255,0,85,0.2);">Wyloguj z systemu</button>
+            </div>
+
+        </div>
+
+        <!-- DOLNY PASEK NAWIGACJI -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchView('home', this)">
+                <span class="nav-icon">🏠</span>
+                <span>Pulpit</span>
+            </button>
+            <button class="nav-item" onclick="switchView('cards', this)">
+                <span class="nav-icon">💳</span>
+                <span>Karty</span>
+            </button>
+            <button class="nav-item" onclick="switchView('blik', this)">
+                <span class="nav-icon">📱</span>
+                <span>BLIK</span>
+            </button>
+            <button class="nav-item" onclick="switchView('settings', this)">
+                <span class="nav-icon">⚙️</span>
+                <span>Opcje</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MODAL: SZCZEGÓŁY TRANSAKCJI -->
+    <div id="tx-detail-modal" class="modal-overlay" onclick="closeTxModal(event)">
+        <div class="tx-modal-content" onclick="event.stopPropagation()">
+            <div style="width: 40px; height: 4px; background: var(--accent-blue); border-radius: 2px; margin: 0 auto 20px; box-shadow: 0 0 10px var(--accent-blue);"></div>
+            <h3 id="modalTxTitle" style="margin: 0 0 5px; font-size: 18px;">Nazwa transakcji</h3>
+            <p id="modalTxDate" style="font-size: 11px; color: var(--text-sub); margin: 0 0 20px; text-transform: uppercase; letter-spacing: 0.5px;">Data</p>
+            
+            <div style="background: var(--card-inner); border-radius: 18px; padding: 16px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                <div style="margin-bottom:8px; display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-sub); font-size:12px;">Kwota:</span>
+                    <strong id="modalTxAmount" style="font-size:15px;">0 PLN</strong>
+                </div>
+                <div style="margin-bottom:8px; display:flex; justify-content:space-between;" id="modalPartyContainer">
+                    <span id="modalPartyLabel" style="color:var(--text-sub); font-size:12px;">Strona:</span>
+                    <strong id="modalTxParty" style="font-size:13px;">Brak</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-sub); font-size:12px;">Status:</span>
+                    <strong style="color: #00ff88; font-size:13px;">Zatwierdzona Quantum</strong>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="closeTxModal()">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- MODAL: SZCZEGÓŁY KARTY -->
+    <div id="card-detail-modal" class="modal-overlay" onclick="closeCardModal(event)">
+        <div class="tx-modal-content" onclick="event.stopPropagation()">
+            <div style="width: 40px; height: 4px; background: var(--accent-blue); border-radius: 2px; margin: 0 auto 20px; box-shadow: 0 0 10px var(--accent-blue);"></div>
+            
+            <div class="modal-card-visual" id="interactiveHologramCard">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; z-index:2;">
+                    <div class="card-chip-gold"></div>
+                    <div id="modalCardTypeTitle" style="font-size:14px; font-weight:900; font-style:italic; letter-spacing:2px; color:#fff;">VISA GOLD</div>
+                </div>
+                <div id="modalCardVisualNum" style="font-family:monospace; font-size:16px; letter-spacing:3px; z-index:2; font-weight:700;">4512 8900 1234 4821</div>
+                
+                <div class="card-hologram-mobywatel">
+                    <div class="moby-holo-shine"></div>
+                    <div class="moby-holo-glare"></div>
+                    <svg class="moby-holo-eagle" viewBox="0 0 24 24">
+                        <path d="M12 2L15 8H9L12 2Z M5 10H19L17 21H7L5 10Z"/>
+                    </svg>
+                </div>
+
+                <div style="font-size:11px; font-weight:700; z-index:2; letter-spacing:1px;" id="modalCardVisualHolder">JAN KOWALSKI</div>
+            </div>
+
+            <div style="background: var(--card-inner); border-radius: 18px; padding: 16px; margin-bottom: 20px; border: 1px solid var(--border-color);">
+                <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.5px;">Pełny numer:</span>
+                    <strong id="modalCardNumber" style="font-family:monospace; font-size:13px; letter-spacing:1px;">4512 8900 1234 4821</strong>
+                </div>
+                <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.5px;">Ważność:</span>
+                    <strong id="modalCardExpiry">08/28</strong>
+                </div>
+                <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.5px;">Kod CVV2:</span>
+                    <strong id="modalCardCvv" style="font-family:monospace; color:var(--accent-blue);">482</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; color:var(--text-sub); text-transform:uppercase; letter-spacing:0.5px;">Posiadacz:</span>
+                    <strong id="modalCardHolder">JAN KOWALSKI</strong>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="closeCardModal()">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- MODAL: DODAWANIA KARTY -->
+    <div id="add-card-modal" class="modal-overlay">
+        <div class="modal-body">
+            <h3 style="margin:0 0 15px; font-size:16px; text-transform:uppercase; letter-spacing:1px;">Generator karty quantum</h3>
+            <div class="login-input-group">
+                <label>Posiadacz</label>
+                <input type="text" id="newCardHolder" placeholder="JAN KOWALSKI">
+            </div>
+            <div class="login-input-group">
+                <label>Protokół karty</label>
+                <select id="newCardType" style="width:100%; padding:16px; border-radius:16px; border:1px solid var(--border-color); background:var(--card-inner); color:var(--text-main); font-weight:600; outline:none;">
+                    <option value="Visa Gold">Visa Gold Quantum</option>
+                    <option value="Mastercard">Mastercard Cyber</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="createNewCard()">Zsyntetizuj kartę</button>
+            <button class="btn-secondary" onclick="closeAddCardModal()">Anuluj</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let userCards = [
+        { id: 1, holder: "JAN KOWALSKI", number: "•••• •••• •••• 4821", fullNumber: "4512 8900 1234 4821", expiry: "08/28", cvv: "482", type: "Visa Gold" }
+    ];
+
+    const historyData = [
+        { title: "Neural CyberShop", date: "Dzisiaj, 14:20", amount: "-45,20 PLN", type: "neg", partyLabel: "Odbiorca", party: "Cyber Logistics Corp" },
+        { title: "Quantum Transfer Salary", date: "Wczoraj, 09:15", amount: "+4 500,00 PLN", type: "pos", partyLabel: "Nadawca", party: "Neo Tokyo Systems" },
+        { title: "Quantum Energy Grid", date: "10 Czerwiec", amount: "-180,00 PLN", type: "neg", partyLabel: "Odbiorca", party: "Grid Power Poland" }
+    ];
+
+    // PRAWDZIWY WEBAUTHN / BIOMETRYCZNY LOGIN
+    async function triggerBiometricAuth() {
+        const box = document.getElementById('faceIdBtn');
+        const errEl = document.getElementById('login-error');
+        errEl.innerText = "";
+        box.classList.add('scanning');
+        document.getElementById('login-sub-text').innerText = "Weryfikacja biometryczna w toku...";
+
+        try {
+            if (window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
+                // Próba użycia prawdziwego sensoru biometrycznego urządzenia (Windows Hello / Touch ID / Face ID)
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                
+                await navigator.credentials.create({
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "mBank Quantum 2026" },
+                        user: {
+                            id: new Uint8Array(16),
+                            name: "jan.kowalski@quantum.pl",
+                            displayName: "Jan Kowalski"
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        timeout: 60000,
+                        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
+                    }
+                });
+                
+                box.classList.remove('scanning');
+                openApp();
+            } else {
+                // Symulacja zaawansowanego skanera, gdy platforma nie wspiera WebAuthn bezpośrednio w iframe/środowisku
+                setTimeout(() => {
+                    box.classList.remove('scanning');
+                    openApp();
+                }, 1500);
+            }
+        } catch (err) {
+            box.classList.remove('scanning');
+            // Jeśli użytkownik anulował okno systemu, pozwól mu wejść automatycznie po chwili dla wygody testów lub pokaż błąd
+            setTimeout(() => {
+                box.classList.remove('scanning');
+                openApp();
+            }, 1000);
+        }
+    }
+
+    document.getElementById('btn-login-main').addEventListener('click', () => {
+        if (document.getElementById('pwdInput').value.length < 3) {
+            document.getElementById('login-error').innerText = "Wprowadź prawidłowy klucz";
+            return;
+        }
+        openApp();
+    });
+
+    function openApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'flex';
+        renderCardList();
+        renderSettingsCards();
+        renderTransactions();
+    }
+
+    function logout() {
+        document.getElementById('app-screen').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('login-sub-text').innerText = "Kliknij sensor lub użyj klucza systemowego";
+    }
+
+    function switchView(viewName, btnEl) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        document.getElementById(`view-${viewName}`).classList.add('active');
+
+        if (btnEl) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+
+        if (viewName === 'settings') renderSettingsCards();
+        if (viewName === 'blik' && !blikTimer) generateBLIK();
+    }
+
+    function renderCardList() {
+        const container = document.getElementById('cards-wrapper');
+        container.innerHTML = '';
+        userCards.forEach(c => {
+            container.innerHTML += `
+                <div class="card-container">
+                    <div class="bank-card-graphic" onclick="openCardModal(${c.id})">
+                        <div class="card-graphic-header">
+                            <div class="card-chip-gold"></div>
+                            <div class="visa-gold-title">${c.type.toUpperCase()}</div>
+                        </div>
+                        <div class="card-masked-number">${c.number}</div>
+                        <div class="card-graphic-footer">
+                            <div>
+                                <div class="card-holder-label">Posiadacz neuralny</div>
+                                <div class="card-holder-value">${c.holder}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function renderSettingsCards() {
+        const container = document.getElementById('settings-cards-list');
+        container.innerHTML = '';
+        if(userCards.length === 0) {
+            container.innerHTML = '<div style="font-size:11px; color:var(--text-sub); text-align:center; padding:10px; text-transform:uppercase;">Brak aktywnych kart</div>';
+            return;
+        }
+        userCards.forEach(c => {
+            container.innerHTML += `
+                <div class="tx-item">
+                    <div>
+                        <div class="tx-title">${c.type}</div>
+                        <div class="tx-date">${c.number}</div>
+                    </div>
+                    <button class="btn-secondary" style="width: auto; padding: 6px 12px; font-size: 10px; color: var(--accent-red); border-color: rgba(255,0,85,0.3); font-weight:700;" onclick="removeCard(${c.id})">Usuń</button>
+                </div>
+            `;
+        });
+    }
+
+    function openCardModal(cardId) {
+        const card = userCards.find(c => c.id === cardId);
+        if (!card) return;
+        document.getElementById('modalCardTypeTitle').innerText = card.type.toUpperCase();
+        document.getElementById('modalCardVisualNum').innerText = card.fullNumber;
+        document.getElementById('modalCardVisualHolder').innerText = card.holder;
+        document.getElementById('modalCardNumber').innerText = card.fullNumber;
+        document.getElementById('modalCardExpiry').innerText = card.expiry;
+        document.getElementById('modalCardCvv').innerText = card.cvv;
+        document.getElementById('modalCardHolder').innerText = card.holder;
+        document.getElementById('card-detail-modal').style.display = 'flex';
+    }
+
+    function closeCardModal() {
+        document.getElementById('card-detail-modal').style.display = 'none';
+    }
+
+    function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
+    function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
+
+    function createNewCard() {
+        const holderInput = document.getElementById('newCardHolder').value || "JAN KOWALSKI";
+        const typeInput = document.getElementById('newCardType').value;
+        const randomDigits = Math.floor(1000 + Math.random() * 9000);
+        
+        userCards.push({
+            id: Date.now(),
+            holder: holderInput.toUpperCase(),
+            number: `•••• •••• •••• ${randomDigits}`,
+            fullNumber: `4512 8900 ${Math.floor(1000 + Math.random() * 9000)} ${randomDigits}`,
+            expiry: "12/29",
+            cvv: Math.floor(100 + Math.random() * 900).toString(),
+            type: typeInput
+        });
+
+        renderCardList();
+        renderSettingsCards();
+        closeAddCardModal();
+        document.getElementById('newCardHolder').value = '';
+    }
+
+    function removeCard(id) {
+        if(confirm("Czy na pewno chcesz usunąć ten węzeł karty?")) {
+            userCards = userCards.filter(c => c.id !== id);
+            renderCardList();
+            renderSettingsCards();
+        }
+    }
+
+    function renderTransactions() {
+        const listContainer = document.getElementById('home-tx-list');
+        listContainer.innerHTML = '';
+        historyData.forEach((item, index) => {
+            listContainer.innerHTML += `
+                <div class="tx-item" onclick="openTxModal(${index})">
+                    <div>
+                        <div class="tx-title">${item.title}</div>
+                        <div class="tx-date">${item.date}</div>
+                    </div>
+                    <div class="tx-amount ${item.type}">${item.amount}</div>
+                </div>
+            `;
+        });
+    }
+
+    function openTxModal(index) {
+        const tx = historyData[index];
+        document.getElementById('modalTxTitle').innerText = tx.title;
+        document.getElementById('modalTxDate').innerText = tx.date;
+        document.getElementById('modalTxAmount').innerText = tx.amount;
+        document.getElementById('modalPartyLabel').innerText = tx.partyLabel + ":";
+        document.getElementById('modalTxParty').innerText = tx.party;
+        document.getElementById('tx-detail-modal').style.display = 'flex';
+    }
+
+    function closeTxModal() {
+        document.getElementById('tx-detail-modal').style.display = 'none';
+    }
+
+    let blikTimer;
+    function generateBLIK() {
+        clearInterval(blikTimer);
+        const codeVal = Math.floor(100000 + Math.random() * 900000).toString();
+        document.getElementById('blikCode').innerText = `${codeVal.substring(0,3)} ${codeVal.substring(3,6)}`;
+
+        let secondsLeft = 120;
+        const fillBar = document.getElementById('blikProgress');
+        const textLabel = document.getElementById('blikTimerText');
+
+        blikTimer = setInterval(() => {
+            secondsLeft--;
+            textLabel.innerText = `Ważny przez: ${secondsLeft}s`;
+            fillBar.style.width = `${(secondsLeft / 120) * 100}%`;
+
+            if (secondsLeft <= 0) {
+                clearInterval(blikTimer);
+                document.getElementById('blikCode').innerText = "EXPIRED";
+            }
+        }, 1000);
+    }
+
+    function toggleAppTheme() {
+        document.body.classList.toggle('light-mode', document.getElementById('themeSwitch').checked);
+    }
+
+    let latestX = window.innerWidth / 2;
+    let latestY = window.innerHeight / 2;
+    let ticking = false;
+
+    function handlePointerMove(e) {
+        latestX = e.clientX;
+        latestY = e.clientY;
+        requestHologramUpdate();
+    }
+
+    function handleTouchMove(e) {
+        if (e.touches.length > 0) {
+            latestX = e.touches[0].clientX;
+            latestY = e.touches[0].clientY;
+            requestHologramUpdate();
+        }
+    }
+
+    function requestHologramUpdate() {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                let x = (latestX / window.innerWidth) * 100;
+                let y = (latestY / window.innerHeight) * 100;
+                
+                document.documentElement.style.setProperty('--pointer-x', `${x}%`);
+                document.documentElement.style.setProperty('--pointer-y', `${y}%`);
+                
+                let rotX = (y - 50) * -0.15;
+                let rotY = (x - 50) * 0.15;
+                document.documentElement.style.setProperty('--card-rotate-x', `${rotX}deg`);
+                document.documentElement.style.setProperty('--card-rotate-y', `${rotY}deg`);
+                
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+
+    function requestGyroAccess() {
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            DeviceMotionEvent.requestPermission().then(response => {
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                    document.getElementById('gyroBanner').style.display = 'none';
+                }
+            }).catch(console.error);
+        } else if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', handleOrientation);
+            document.getElementById('gyroBanner').style.display = 'none';
+        } else {
+            alert("Czujnik przestrzenny niedostępny.");
+        }
+    }
+
+    function handleOrientation(e) {
+        if (e.gamma !== null && e.beta !== null) {
+            latestX = ((e.gamma + 45) / 90) * window.innerWidth;
+            latestY = ((e.beta - 20) / 60) * window.innerHeight;
+            requestHologramUpdate();
+        }
+    }
+</script>
+
+</body>
+</html>
