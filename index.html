@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quantum Bank // Next-Gen Financial Ecosystem Enterprise Edition</title>
+    <style>
+        /* ==========================================================================
+           QUANTUM BANK DESIGN SYSTEM - CORE VARIABLES & TOKENS
+           ========================================================================== */
+        :root {
+            --bg-app: #030712;
+            --surface-primary: #0f172a;
+            --surface-secondary: #1e293b;
+            --surface-tertiary: #334155;
+            --surface-glass: rgba(15, 23, 42, 0.9);
+            --surface-glass-card: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(59, 130, 246, 0.5);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dimmed: #64748b;
+            --accent-primary: #3b82f6;
+            --accent-primary-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.35);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.25);
+            --accent-red: #ef4444;
+            --accent-red-glow: rgba(239, 68, 68, 0.25);
+            --accent-purple: #8b5cf6;
+            --card-gradient-1: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --card-gradient-2: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --card-gradient-3: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            --card-gradient-4: linear-gradient(135deg, #059669 0%, #047857 100%);
+            --shadow-elevation: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --shadow-subtle: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            --radius-sm: 12px;
+            --radius-md: 18px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-app: #f1f5f9;
+            --surface-primary: #ffffff;
+            --surface-secondary: #f8fafc;
+            --surface-tertiary: #e2e8f0;
+            --surface-glass: rgba(255, 255, 255, 0.9);
+            --surface-glass-card: rgba(248, 250, 252, 0.8);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-focus: rgba(37, 99, 235, 0.4);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-dimmed: #94a3b8;
+            --accent-primary: #2563eb;
+            --accent-primary-hover: #1d4ed8;
+            --accent-glow: rgba(37, 99, 235, 0.2);
+            --accent-green: #059669;
+            --accent-green-glow: rgba(5, 150, 105, 0.15);
+            --accent-red: #dc2626;
+            --accent-red-glow: rgba(220, 38, 38, 0.15);
+            --accent-purple: #7c3aed;
+            --card-gradient-1: linear-gradient(135deg, #334155 0%, #0f172a 100%);
+            --card-gradient-2: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            --card-gradient-3: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            --card-gradient-4: linear-gradient(135deg, #059669 0%, #065f46 100%);
+            --shadow-elevation: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            --shadow-subtle: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* ==========================================================================
+           GLOBAL RESET & TYPOGRAPHY
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* ==========================================================================
+           APP CONTAINER & VIEWPORT FRAME
+           ========================================================================== */
+        .app-viewport {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background-color: var(--bg-app);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,0,0,0.4), var(--shadow-elevation);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.4s ease, border-color 0.4s ease;
+        }
+
+        @media (min-width: 420px) {
+            .app-viewport {
+                border-radius: 44px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .view-section {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .view-section.active {
+            display: flex;
+            animation: viewFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes viewFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97) translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            width: 100%;
+            scrollbar-width: none;
+            scroll-behavior: smooth;
+        }
+
+        .content-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 14px;
+            font-weight: 700;
+        }
+
+        /* ==========================================================================
+           1. AUTHENTICATION & FACE ID SCREEN
+           ========================================================================== */
+        #login-screen {
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+            background: radial-gradient(circle at center, var(--surface-primary) 0%, var(--bg-app) 100%);
+        }
+
+        .brand-logo-container {
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .face-id-scanner {
+            width: 110px;
+            height: 110px;
+            border-radius: 36px;
+            background: var(--surface-secondary);
+            border: 2px solid var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 46px;
+            margin: 0 auto 24px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 35px var(--accent-glow);
+            transition: var(--transition-smooth);
+        }
+
+        .face-id-scanner:active {
+            transform: scale(0.94);
+        }
+
+        .scanner-beam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-primary);
+            opacity: 0;
+        }
+
+        .face-id-scanner.scanning .scanner-beam {
+            opacity: 1;
+            animation: scanBeamAnim 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes scanBeamAnim {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(104px); }
+        }
+
+        .auth-card-box {
+            background: var(--surface-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: var(--surface-secondary);
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 10px 25px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-primary-hover);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--surface-secondary);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-tertiary);
+        }
+
+        /* ==========================================================================
+           2. APP HEADER & NAVIGATION BAR (Bank-grade Professional Layout)
+           ========================================================================== */
+        .app-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 20;
+        }
+
+        .user-profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            font-size: 16px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .user-meta h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .user-meta p {
+            margin: 2px 0 0;
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .secure-badge {
+            background: var(--surface-secondary);
+            border: 1px solid var(--border-color);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        /* Professional 4-Tab Bottom Navigation matching top banking standards */
+        .bottom-nav {
+            height: 74px;
+            background: var(--surface-glass);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item.active {
+            color: var(--accent-primary);
+            background: var(--accent-glow);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* ==========================================================================
+           3. DASHBOARD / HOME SCREEN
+           ========================================================================== */
+        .balance-card {
+            background: var(--card-gradient-2);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .balance-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.85;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: 900;
+            margin: 8px 0 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .quick-action-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 10px;
+            border-radius: var(--radius-sm);
+            color: white;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(8px);
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-action-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateY(-2px);
+        }
+
+        .section-box {
+            background: var(--surface-primary);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: 18px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .tx-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .tx-row:last-child {
+            border-bottom: none;
+        }
+
+        .tx-row:hover {
+            opacity: 0.8;
+        }
+
+        .tx-info h5 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .tx-info span {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .tx-val {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .tx-val.pos {
+            color: var(--accent-green);
+        }
+
+        .tx-val.neg {
+            color: var(--text-main);
+        }
+
+        /* ==========================================================================
+           4. CARDS & MOBYWATEL HOLOGRAM VIEW
+           ========================================================================== */
+        .card-carousel {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 14px;
+            scrollbar-width: none;
+            margin-bottom: 20px;
+        }
+
+        .card-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .bank-card-item {
+            min-width: 320px;
+            height: 190px;
+            border-radius: var(--radius-md);
+            padding: 22px;
+            color: white;
+            background: var(--card-gradient-1);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            flex-shrink: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .bank-card-item:nth-child(2) { background: var(--card-gradient-3); }
+        .bank-card-item:nth-child(3) { background: var(--card-gradient-4); }
+
+        .card-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-item-number {
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 3px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .card-item-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            opacity: 0.9;
+        }
+
+        .delete-card-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .delete-card-btn:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        /* Hologram mObywatel z interaktywnym pochyleniem 3D na żyroskop lub ruch myszy */
+        .mobywatel-hologram-box {
+            background: var(--surface-primary);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+            box-shadow: var(--shadow-subtle);
+            perspective: 1000px;
+        }
+
+        .holo-card-container {
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-style;
+        }
+
+        .holo-badge {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #3b82f6, #9333ea, #ec4899, #06b6d4, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            animation: rotateHolo 6s linear infinite;
+        }
+
+        @keyframes rotateHolo {
+            100% { transform: rotate(360deg); }
+        }
+
+        .motion-permission-banner {
+            background: var(--surface-secondary);
+            border: 1px dashed var(--accent-primary);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        /* ==========================================================================
+           5. SETTINGS SCREEN & PREFERENCES
+           ========================================================================== */
+        .settings-option {
+            background: var(--surface-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-subtle);
+            transition: var(--transition-smooth);
+        }
+
+        .settings-option:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: var(--surface-tertiary);
+            transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 28px;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* ==========================================================================
+           6. MODALS & OVERLAYS
+           ========================================================================== */
+        .modal-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(3, 7, 18, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-end;
+            animation: fadeInOverlay 0.3s ease forwards;
+        }
+
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--surface-primary);
+            width: 100%;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            padding: 28px;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 -20px 40px rgba(0,0,0,0.4);
+            animation: slideUpModal 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpModal {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-viewport">
+
+    <!-- ==========================================================================
+       VIEW: LOGIN & FACE ID SCREEN
+       ========================================================================== -->
+    <div id="login-screen" class="view-section active">
+        <div class="brand-logo-container">
+            <div class="brand-logo">QUANTUM BANK</div>
+            <div class="brand-subtitle">Next-Gen Financial Ecosystem</div>
+        </div>
+        
+        <div id="first-time-login-box" class="auth-card-box">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; font-weight: 600; line-height: 1.5;">Wprowadź kod PIN lub hasło. Zostanie ono zapamiętane do automatycznego szybkiego logowania biometrycznego.</p>
+            <div class="input-group">
+                <label>Hasło lub PIN dostępu</label>
+                <input type="password" id="initial-password-input" class="input-field" placeholder="Wpisz np. 1234">
+            </div>
+            <button class="btn btn-primary" onclick="setupFaceIdAndLogin()">Zaloguj i zapamiętaj dane</button>
+        </div>
+
+        <div id="biometric-login-box" class="hidden auth-card-box">
+            <div class="face-id-scanner" onclick="runBiometricLogin()">
+                <div class="scanner-beam"></div>
+                👤
+            </div>
+            <p id="biometric-status-text" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; font-weight: 600;">Dotknij skanera, aby użyć zapisanego loginu</p>
+            <button class="btn btn-secondary" onclick="resetBiometricData()" style="font-size:12px; padding:10px;">Zresetuj zapisany PIN / Face ID</button>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       VIEW: MAIN APPLICATION CONTAINER
+       ========================================================================== -->
+    <div id="app-screen" class="view-section">
+        <header class="app-header">
+            <div class="user-profile-trigger" onclick="openProfileModal()">
+                <div id="header-avatar" class="avatar">JK</div>
+                <div class="user-meta">
+                    <h4 id="header-name">Jan Kowalski</h4>
+                    <p>Klient Enterprise</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="secure-badge" title="Połączenie Szyfrowane">🛡️</div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <!-- TAB 1: PULPIT -->
+            <div id="view-home" class="view-section active" style="display:flex;">
+                <div class="balance-card">
+                    <p class="balance-title">Dostępne środki ogółem</p>
+                    <div class="balance-amount">34 890,50 PLN</div>
+                    <div class="quick-actions-grid">
+                        <div class="quick-action-btn" onclick="openBlikModal()"><span>📱</span>Generuj BLIK</div>
+                        <div class="quick-action-btn" onclick="openTransferModal()"><span>💸</span>Nowy Przelew</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Ostatnie operacje i przelewy</div>
+                <div class="section-box" id="transactions-container">
+                    <!-- Dynamiczne transakcje -->
+                </div>
+            </div>
+
+            <!-- TAB 2: KARTY -->
+            <div id="view-cards" class="view-section">
+                <div class="section-title">Zarządzanie kartami płatniczymi</div>
+                <div class="card-carousel" id="cards-carousel-container">
+                    <!-- Dynamiczne karty -->
+                </div>
+
+                <div class="mobywatel-hologram-box">
+                    <div id="motion-banner-container"></div>
+                    <div class="holo-card-container" id="holo-card-element">
+                        <div class="holo-badge">🛡️</div>
+                        <h3 style="font-size:16px; margin-bottom:8px; font-weight:800;">Hologram Weryfikacyjny</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin:0 0 18px; line-height: 1.5;">Zaawansowany certyfikat kryptograficzny anty-fraud kompatybilny ze standardem mObywatel. Poruszaj urządzeniem lub myszką, aby kontrolować refleks hologramu.</p>
+                    </div>
+                    <button class="btn btn-secondary" style="margin-top:0;" onclick="openCardAddModal()">Dodaj nową kartę do portfela</button>
+                </div>
+            </div>
+
+            <!-- TAB 3: USTAWIENIA -->
+            <div id="view-settings" class="view-section">
+                <div class="section-title">Preferencje systemu</div>
+                <div class="settings-option">
+                    <div>
+                        <h4 style="margin:0; font-size:14px; font-weight:700;">Tryb Jasny / Ciemny</h4>
+                        <p style="margin:2px 0 0; font-size:11px; color:var(--text-muted);">Dostosuj motyw wizualny interfejsu</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle-checkbox" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-option">
+                    <div>
+                        <h4 style="margin:0; font-size:14px; font-weight:700;">Powiadomienia PUSH</h4>
+                        <p style="margin:2px 0 0; font-size:11px; color:var(--text-muted);">Alerty o transakcjach i bezpieczeństwie</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-option" onclick="openCardAddModal()" style="cursor:pointer;">
+                    <div>
+                        <h4 style="margin:0; font-size:14px; font-weight:700;">Dodaj lub usuń karty</h4>
+                        <p style="margin:2px 0 0; font-size:11px; color:var(--text-muted);">Zarządzaj portfelem wirtualnym</p>
+                    </div>
+                    <span style="font-size:16px;">➕</span>
+                </div>
+                <button class="btn btn-secondary" style="color: var(--accent-red); border-color: rgba(239,68,68,0.3); margin-top: 24px;" onclick="fullLogout()">Wyloguj i zresetuj Face ID</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Pulpit</button>
+            <button class="nav-item" onclick="switchTab('cards')"><span class="nav-icon">💳</span>Karty</button>
+            <button class="nav-item" onclick="switchTab('settings')"><span class="nav-icon">⚙️</span>Ustawienia</button>
+        </nav>
+    </div>
+
+    <!-- ==========================================================================
+       MODALS: SZCZEGÓŁY, BLIK, PRZELEW, PROFIL, DODAWANIE KARTY
+       ========================================================================== -->
+    <div id="tx-details-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="section-title">Szczegóły transakcji</div>
+            <div style="background:var(--surface-secondary); padding:20px; border-radius:var(--radius-sm); margin-bottom:20px; border:1px solid var(--border-color);">
+                <p style="font-size:11px; color:var(--text-muted); margin:0; text-transform:uppercase;">Odbiorca / Nadawca</p>
+                <h4 id="modal-tx-title" style="margin:4px 0 16px; font-size:18px;">Nazwa transakcji</h4>
+                <p style="font-size:11px; color:var(--text-muted); margin:0; text-transform:uppercase;">Rachunek rozliczeniowy</p>
+                <p style="font-family:monospace; margin:4px 0 16px; font-size:13px; font-weight: 700;">PL 43 1140 2004 0000 3802 7591 2940</p>
+                <p style="font-size:11px; color:var(--text-muted); margin:0; text-transform:uppercase;">Kwota operacji</p>
+                <h3 id="modal-tx-amount" style="margin:4px 0 0; font-size:22px; color:var(--accent-primary);">0.00 PLN</h3>
+            </div>
+            <button class="btn btn-primary" onclick="closeTxModal()">Zamknij szczegóły</button>
+        </div>
+    </div>
+
+    <!-- MODAL BLIK Z LICZNIKIEM -->
+    <div id="blik-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <div class="section-title">Kod BLIK Quantum</div>
+            <div style="background:var(--surface-secondary); padding:24px; border-radius:var(--radius-md); margin-bottom:20px; border:1px solid var(--border-color);">
+                <div id="blik-code-display" style="font-family: monospace; font-size: 38px; font-weight: 900; letter-spacing: 6px; color: var(--accent-primary); margin-bottom: 12px;">••••••</div>
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Ważny jeszcze przez: <span id="blik-timer" style="color: var(--text-main); font-weight: 700;">120</span>s</div>
+                <div style="width: 100%; height: 4px; background: var(--surface-tertiary); border-radius: 2px; margin-top: 14px; overflow: hidden;">
+                    <div id="blik-progress-bar" style="width: 100%; height: 100%; background: var(--accent-primary); transition: width 1s linear;"></div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateNewBlikCode()" style="margin-bottom: 10px;">Generuj nowy kod</button>
+            <button class="btn btn-secondary" onclick="closeBlikModal()">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- MODAL NOWY PRZELEW -->
+    <div id="transfer-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="section-title">Wykonaj przelew krajowy</div>
+            <div class="input-group"><label>Nazwa odbiorcy</label><input type="text" id="transfer-recipient" class="input-field" placeholder="np. Jan Nowak"></div>
+            <div class="input-group"><label>Numer konta odbiorcy</label><input type="text" id="transfer-account" class="input-field" placeholder="PL 00 0000 0000 0000 0000 0000 0000"></div>
+            <div class="input-group"><label>Kwota (PLN)</label><input type="number" id="transfer-amount" class="input-field" placeholder="0.00"></div>
+            <button class="btn btn-primary" onclick="submitTransfer()" style="margin-top:10px;">Potwierdź i wyślij przelew</button>
+            <button class="btn btn-secondary" onclick="closeTransferModal()">Anuluj</button>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="section-title">Edycja profilu klienta</div>
+            <div style="text-align:center; margin-bottom:20px;">
+                <div id="modal-avatar-preview" class="avatar" style="width:80px; height:80px; margin:0 auto 12px; font-size:28px; cursor:pointer;" onclick="document.getElementById('avatar-file-input').click()">JK</div>
+                <input type="file" id="avatar-file-input" class="hidden" accept="image/*" onchange="handleAvatarUpload(event)">
+                <span style="font-size:12px; color:var(--accent-primary); font-weight:700; cursor:pointer;" onclick="document.getElementById('avatar-file-input').click()">Zmień zdjęcie profilowe z galerii</span>
+            </div>
+            <div class="input-group"><label>Imię i nazwisko</label><input type="text" id="profile-name-edit" class="input-field" value="Jan Kowalski"></div>
+            <div class="input-group"><label>Data urodzenia</label><input type="date" id="profile-dob-edit" class="input-field" value="1995-05-14"></div>
+            <button class="btn btn-primary" onclick="saveProfileChanges()" style="margin-top:10px;">Zapisz zmiany profilu</button>
+            <button class="btn btn-secondary" onclick="closeProfileModal()">Anuluj</button>
+        </div>
+    </div>
+
+    <div id="card-add-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="section-title">Dodawanie nowej karty</div>
+            <div class="input-group"><label>Nazwa karty (np. Wakacje, Subskrypcje)</label><input type="text" id="new-card-name" class="input-field" value="Karta Dodatkowa Quantum"></div>
+            <div class="input-group"><label>Ostatnie 4 cyfry numeru karty</label><input type="text" id="new-card-num" class="input-field" value="7742" maxlength="4"></div>
+            <button class="btn btn-primary" onclick="addNewCard()" style="margin-top:10px;">Dodaj do wirtualnego portfela</button>
+            <button class="btn btn-secondary" onclick="closeCardAddModal()">Anuluj</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ==========================================================================
+   APPLICATION LOGIC & CONTROLLER SCRIPTS
+   ========================================================================== -->
+<script>
+    let userProfile = {
+        name: localStorage.getItem('q_name') || "Jan Kowalski",
+        dob: localStorage.getItem('q_dob') || "1995-05-14",
+        avatar: localStorage.getItem('q_avatar') || ""
+    };
+
+    let userCards = JSON.parse(localStorage.getItem('q_cards')) || [
+        { id: 1, name: "Karta Główna Quantum", number: "4821 •••• •••• 9924", expiry: "12/29" },
+        { id: 2, name: "Karta Walutowa USD", number: "5341 •••• •••• 1042", expiry: "08/30" }
+    ];
+
+    let transactions = JSON.parse(localStorage.getItem('q_transactions')) || [
+        { id: 1, title: "Cyberpunk Coffee Lab", date: "Dzisiaj, 14:20", amount: "-45,20 PLN", pos: false },
+        { id: 2, title: "Wpływ wynagrodzenia", date: "Wczoraj, 10:00", amount: "+8 400,00 PLN", pos: true },
+        { id: 3, title: "Neo-Tokyo Electronics", date: "22 Maj", amount: "-1 250,00 PLN", pos: false },
+        { id: 4, title: "Subskrypcja Cloud Server", date: "18 Maj", amount: "-199,00 PLN", pos: false }
+    ];
+
+    let blikTimerInterval = null;
+    let blikTimeLeft = 120;
+
+    window.onload = function() {
+        applyProfileData();
+        renderTransactions();
+        renderCards();
+        checkLoginState();
+        initMotionAndHologram();
+
+        if(localStorage.getItem('q_theme') === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.getElementById('theme-toggle-checkbox').checked = true;
+        }
+    };
+
+    function checkLoginState() {
+        const savedPin = localStorage.getItem('q_auth_token');
+        if(savedPin) {
+            document.getElementById('first-time-login-box').classList.add('hidden');
+            document.getElementById('biometric-login-box').classList.remove('hidden');
+            document.getElementById('biometric-status-text').innerText = "Wykryto zapamiętany PIN. Dotknij skanera twarzy.";
+        } else {
+            document.getElementById('first-time-login-box').classList.remove('hidden');
+            document.getElementById('biometric-login-box').classList.add('hidden');
+        }
+    }
+
+    function setupFaceIdAndLogin() {
+        const pass = document.getElementById('initial-password-input').value;
+        if(pass.length > 0) {
+            localStorage.setItem('q_auth_token', pass);
+            enterMainApp();
+        } else {
+            alert("Wprowadź hasło lub PIN!");
+        }
+    }
+
+    function runBiometricLogin() {
+        const scanner = document.querySelector('.face-id-scanner');
+        const statusText = document.getElementById('biometric-status-text');
+        const savedPin = localStorage.getItem('q_auth_token') || "1234";
+        
+        scanner.classList.add('scanning');
+        statusText.innerText = `Użyto zapisanego kodu (${savedPin}). Autoryzacja...`;
+
+        setTimeout(() => {
+            scanner.classList.remove('scanning');
+            statusText.innerText = "Zalogowano pomyślnie!";
+            setTimeout(() => {
+                enterMainApp();
+            }, 300);
+        }, 1200);
+    }
+
+    function resetBiometricData() {
+        localStorage.removeItem('q_auth_token');
+        checkLoginState();
+    }
+
+    function fullLogout() {
+        resetBiometricData();
+        location.reload();
+    }
+
+    function enterMainApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'flex';
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('#app-screen .view-section').forEach(v => {
+            v.classList.remove('active');
+            v.style.display = 'none';
+        });
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        
+        const target = document.getElementById('view-' + tabId);
+        target.classList.add('active');
+        target.style.display = 'flex';
+        
+        if(tabId === 'home') document.querySelectorAll('.bottom-nav .nav-item')[0].classList.add('active');
+        if(tabId === 'cards') document.querySelectorAll('.bottom-nav .nav-item')[1].classList.add('active');
+        if(tabId === 'settings') document.querySelectorAll('.bottom-nav .nav-item')[2].classList.add('active');
+    }
+
+    function renderTransactions() {
+        const container = document.getElementById('transactions-container');
+        container.innerHTML = '';
+        transactions.forEach(tx => {
+            container.innerHTML += `
+                <div class="tx-row" onclick="openTxModal('${tx.title}', '${tx.amount}')">
+                    <div class="tx-info">
+                        <h5>${tx.title}</h5>
+                        <span>${tx.date}</span>
+                    </div>
+                    <div class="tx-val ${tx.pos ? 'pos' : 'neg'}">${tx.amount}</div>
+                </div>
+            `;
+        });
+    }
+
+    function renderCards() {
+        const container = document.getElementById('cards-carousel-container');
+        container.innerHTML = '';
+        userCards.forEach(c => {
+            container.innerHTML += `
+                <div class="bank-card-item">
+                    <div class="card-item-top">
+                        <span style="font-size:11px; font-weight:700; opacity:0.85;">${c.name}</span>
+                        <button class="delete-card-btn" onclick="deleteCard(${c.id})">USUŃ</button>
+                    </div>
+                    <div class="card-item-number">${c.number}</div>
+                    <div class="card-item-footer">
+                        <span>${userProfile.name.toUpperCase()}</span>
+                        <span>EXP ${c.expiry}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function addNewCard() {
+        const name = document.getElementById('new-card-name').value;
+        const num = document.getElementById('new-card-num').value;
+        if(name && num) {
+            userCards.push({ id: Date.now(), name: name, number: `4821 •••• •••• ${num}`, expiry: "10/33" });
+            localStorage.setItem('q_cards', JSON.stringify(userCards));
+            renderCards();
+            closeCardAddModal();
+        } else {
+            alert("Uzupełnij pola formularza karty.");
+        }
+    }
+
+    function deleteCard(id) {
+        if(userCards.length <= 1) {
+            alert("System wymaga zachowania przynajmniej jednej aktywnej karty w portfelu.");
+            return;
+        }
+        userCards = userCards.filter(c => c.id !== id);
+        localStorage.setItem('q_cards', JSON.stringify(userCards));
+        renderCards();
+    }
+
+    function toggleTheme() {
+        const isLight = document.getElementById('theme-toggle-checkbox').checked;
+        if(isLight) {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('q_theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('q_theme', 'dark');
+        }
+    }
+
+    function initMotionAndHologram() {
+        const bannerContainer = document.getElementById('motion-banner-container');
+        const holoElement = document.getElementById('holo-card-element');
+
+        function applyTilt(x, y) {
+            holoElement.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+        }
+
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            bannerContainer.innerHTML = `
+                <div class="motion-permission-banner" onclick="requestMotionAccess()">
+                    📱 Kliknij tutaj, aby aktywować czujnik ruchu hologramu (iOS / Android)
+                </div>
+            `;
+        } else {
+            window.addEventListener('deviceorientation', (e) => {
+                if (e.beta !== null && e.gamma !== null) {
+                    let tiltX = e.beta / 3;
+                    let tiltY = e.gamma / 3;
+                    applyTilt(tiltX, tiltY);
+                }
+            }, true);
+        }
+
+        const holoBox = document.querySelector('.mobywatel-hologram-box');
+        holoBox.addEventListener('mousemove', (e) => {
+            const rect = holoBox.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            applyTilt(-y / 5, x / 5);
+        });
+
+        holoBox.addEventListener('mouseleave', () => {
+            applyTilt(0, 0);
+        });
+    }
+
+    function requestMotionAccess() {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission().then(response => {
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientation', (e) => {
+                        if (e.beta !== null && e.gamma !== null) {
+                            document.getElementById('holo-card-element').style.transform = `rotateX(${e.beta / 3}deg) rotateY(${e.gamma / 3}deg)`;
+                        }
+                    }, true);
+                    document.getElementById('motion-banner-container').innerHTML = '';
+                } else {
+                    alert("Odmówiono dostępu do czujników ruchu.");
+                }
+            }).catch(console.error);
+        }
+    }
+
+    function openBlikModal() {
+        document.getElementById('blik-modal').style.display = 'flex';
+        generateNewBlikCode();
+    }
+
+    function closeBlikModal() {
+        document.getElementById('blik-modal').style.display = 'none';
+        if(blikTimerInterval) clearInterval(blikTimerInterval);
+    }
+
+    function generateNewBlikCode() {
+        if(blikTimerInterval) clearInterval(blikTimerInterval);
+        
+        const randomCode = Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('blik-code-display').innerText = randomCode;
+        
+        blikTimeLeft = 120;
+        document.getElementById('blik-timer').innerText = blikTimeLeft;
+        document.getElementById('blik-progress-bar').style.width = '100%';
+
+        blikTimerInterval = setInterval(() => {
+            blikTimeLeft--;
+            document.getElementById('blik-timer').innerText = blikTimeLeft;
+            const percentage = (blikTimeLeft / 120) * 100;
+            document.getElementById('blik-progress-bar').style.width = percentage + '%';
+
+            if(blikTimeLeft <= 0) {
+                clearInterval(blikTimerInterval);
+                generateNewBlikCode();
+            }
+        }, 1000);
+    }
+
+    function openTransferModal() {
+        document.getElementById('transfer-modal').style.display = 'flex';
+    }
+
+    function closeTransferModal() {
+        document.getElementById('transfer-modal').style.display = 'none';
+    }
+
+    function submitTransfer() {
+        const recipient = document.getElementById('transfer-recipient').value;
+        const amount = document.getElementById('transfer-amount').value;
+        if(recipient && amount && amount > 0) {
+            transactions.unshift({
+                id: Date.now(),
+                title: recipient,
+                date: "Dzisiaj, przed chwilą",
+                amount: `-${Number(amount).toLocaleString('pl-PL', {minimumFractionDigits: 2})} PLN`,
+                pos: false
+            });
+            localStorage.setItem('q_transactions', JSON.stringify(transactions));
+            renderTransactions();
+            closeTransferModal();
+            alert("Przelew został zrealizowany pomyślnie.");
+        } else {
+            alert("Proszę poprawnie uzupełnić dane przelewu.");
+        }
+    }
+
+    function openTxModal(title, amount) {
+        document.getElementById('modal-tx-title').innerText = title;
+        document.getElementById('modal-tx-amount').innerText = amount;
+        document.getElementById('tx-details-modal').style.display = 'flex';
+    }
+    function closeTxModal() { document.getElementById('tx-details-modal').style.display = 'none'; }
+
+    function openProfileModal() { document.getElementById('profile-modal').style.display = 'flex'; }
+    function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
+
+    function openCardAddModal() { document.getElementById('card-add-modal').style.display = 'flex'; }
+    function closeCardAddModal() { document.getElementById('card-add-modal').style.display = 'none'; }
+
+    function handleAvatarUpload(e) {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                userProfile.avatar = evt.target.result;
+                applyProfileData();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function saveProfileChanges() {
+        userProfile.name = document.getElementById('profile-name-edit').value;
+        userProfile.dob = document.getElementById('profile-dob-edit').value;
+        localStorage.setItem('q_name', userProfile.name);
+        localStorage.setItem('q_dob', userProfile.dob);
+        if(userProfile.avatar) localStorage.setItem('q_avatar', userProfile.avatar);
+        applyProfileData();
+        renderCards();
+        closeProfileModal();
+    }
+
+    function applyProfileData() {
+        document.getElementById('header-name').innerText = userProfile.name;
+        document.getElementById('profile-name-edit').value = userProfile.name;
+        document.getElementById('profile-dob-edit').value = userProfile.dob;
+        
+        const initials = userProfile.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        const headerAvatar = document.getElementById('header-avatar');
+        const modalAvatar = document.getElementById('modal-avatar-preview');
+        
+        if(userProfile.avatar) {
+            headerAvatar.style.backgroundImage = `url('${userProfile.avatar}')`;
+            headerAvatar.innerText = '&#8203;';
+            headerAvatar.innerText = '';
+            modalAvatar.style.backgroundImage = `url('${userProfile.avatar}')`;
+            modalAvatar.innerText = '';
+        } else {
+            headerAvatar.innerText = initials;
+            modalAvatar.innerText = initials;
+        }
+    }
+</script>
+</body>
+</html>
