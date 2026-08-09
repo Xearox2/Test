@@ -1,230 +1,344 @@
-
-<html lang="pl" data-theme="light">
+<!DOCTYPE html>
+<html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <!-- Tagi wymuszające tryb pełnoekranowy na iOS (PWA) -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Portfel">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikacja mDowód</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary: #0052a3;
+            --holo-x: 50%;
+            --holo-y: 50%;
+        }
 
-  <title>Portfel Mobilny PRO</title>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
 
-  <style>
-    :root {
-      --bg-body: #f4f6f9;
-      --bg-card: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      --accent: #2563eb;
-      --accent-blik: #ea580c;
-      --nav-bg: rgba(255, 255, 255, 0.88);
-      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* EKRAN LOGOWANIA BIOMETRIĄ */
+        #login-screen {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .face-id-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border: 3px dashed var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); border-color: var(--primary); }
+            50% { transform: scale(1.05); border-color: #00a8ff; }
+            100% { transform: scale(1); border-color: var(--primary); }
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button:active {
+            background-color: #003a75;
+        }
+
+        /* EKRAN KARTY DOWODU */
+        #app-screen {
+            display: none;
+        }
+
+        .id-card {
+            background: linear-gradient(135deg, #ffffff 0%, #eef4fb 100%);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0, 82, 163, 0.15);
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .photo-and-data {
+            display: flex;
+            gap: 15px;
+        }
+
+        .user-photo {
+            width: 90px;
+            height: 120px;
+            background-color: #ccc;
+            border-radius: 8px;
+            object-fit: cover;
+            background-image: url('https://via.placeholder.com/90x120?text=ZDJECIE');
+        }
+
+        .main-info p {
+            margin: 4px 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .main-info strong {
+            font-size: 15px;
+            color: #111;
+            display: block;
+        }
+
+        /* ROZWIJANA SEKCJA DANYCH Z HOLOGRAMEM */
+        .card-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease;
+            opacity: 0;
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        .card-details.active {
+            max-height: 350px;
+            opacity: 1;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dcdcdc;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .detail-row span { color: #666; }
+        .detail-row strong { color: #222; }
+
+        /* HOLOGRAM DOWODU UNIKALNY DLA SEKCJI DANYCH */
+        .hologram-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .hologram-container {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at var(--holo-x) var(--holo-y), 
+                        rgba(255,255,255,0.9) 0%, 
+                        rgba(255, 0, 128, 0.5) 25%, 
+                        rgba(0, 212, 255, 0.5) 50%, 
+                        rgba(255, 230, 0, 0.5) 75%, 
+                        rgba(200,200,200,0.2) 100%);
+            box-shadow: inset 0 0 5px rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.15);
+            transition: background 0.1s ease;
+        }
+
+        .hologram-eagle {
+            width: 40px;
+            height: 40px;
+            fill: url(#holo-grad);
+            filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.3));
+        }
+
+        .click-hint {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- EKRAN LOGOWANIA -->
+    <div id="login-screen">
+        <div class="face-id-icon">👤</div>
+        <h3>Tożsamość mDowód</h3>
+        <p style="color: #666; font-size: 14px; margin-bottom: 25px;">Zaloguj się za pomocą biometrii twarzy (Face ID)</p>
+        <button id="login-btn">Zaloguj przez Face ID</button>
+    </div>
+
+    <!-- EKRAN DOWODU -->
+    <div id="app-screen">
+        <div class="id-card" id="idCard">
+            <div class="card-header">
+                <h2>RZECZPOSPOLITA POLSKA</h2>
+                <span style="font-size: 10px; font-weight: bold; color: #888;">mDowód</span>
+            </div>
+
+            <div class="photo-and-data">
+                <div class="user-photo"></div>
+                <div class="main-info">
+                    <p>Imię (Imiona)</p>
+                    <strong>JAN KOWALSKI</strong>
+                    <p>Nazwisko</p>
+                    <strong>KOWALSKI</strong>
+                    <p>Obywatelstwo</p>
+                    <strong>POLSKIE</strong>
+                </div>
+            </div>
+
+            <!-- UKRYTE DANE WRAZ Z HOLOGRAMEM (PO KLIKNIĘCIU) -->
+            <div class="card-details" id="cardDetails">
+                <div class="detail-row">
+                    <span>Numer PESEL:</span>
+                    <strong>90010112345</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Numer dowodu:</span>
+                    <strong>ABC 123456</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Data ważności:</span>
+                    <strong>01.01.2034</strong>
+                </div>
+                <div class="detail-row">
+                    <span>Organ wydający:</span>
+                    <strong>PREZYDENT MIASTA</strong>
+                </div>
+
+                <!-- HOLOGRAM ORŁA W SEKCJI DANYCH -->
+                <div class="hologram-wrapper">
+                    <div class="hologram-container" id="hologram">
+                        <svg class="hologram-eagle" viewBox="0 0 24 24">
+                            <defs>
+                                <linearGradient id="holo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ffffff" />
+                                    <stop offset="30%" stop-color="#ffd700" />
+                                    <stop offset="70%" stop-color="#00ffff" />
+                                    <stop offset="100%" stop-color="#ff007f" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M12,2 L15,7 L20,5 L17,11 L22,13 L17,16 L19,21 L12,18 L5,21 L7,16 L2,13 L7,11 L4,5 L9,7 Z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="click-hint">Kliknij w kartę, aby pokazać/ukryć szczegółowe dane i hologram</div>
+    </div>
+
+</div>
+
+<script>
+    const loginBtn = document.getElementById('login-btn');
+    const loginScreen = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app-screen');
+
+    loginBtn.addEventListener('click', async () => {
+        loginBtn.innerText = "Skanowanie twarzy...";
+        if (window.PublicKeyCredential) {
+            try {
+                await requestGyroPermission();
+                showApp();
+            } catch (err) {
+                setTimeout(() => showApp(), 1000);
+            }
+        } else {
+            setTimeout(() => showApp(), 1000);
+        }
+    });
+
+    function showApp() {
+        loginScreen.style.display = 'none';
+        appScreen.style.display = 'block';
+        initGyroscope();
     }
 
-    [data-theme="dark"] {
-      --bg-body: #090d16;
-      --bg-card: #131a27;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #1e293b;
-      --accent: #3b82f6;
-      --accent-blik: #f97316;
-      --nav-bg: rgba(19, 26, 39, 0.88);
-      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    const idCard = document.getElementById('idCard');
+    const cardDetails = document.getElementById('cardDetails');
+
+    idCard.addEventListener('click', () => {
+        cardDetails.classList.toggle('active');
+    });
+
+    function requestGyroPermission() {
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            return DeviceOrientationEvent.requestPermission();
+        }
+        return Promise.resolve('granted');
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+    function initGyroscope() {
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (event) => {
+                let x = event.gamma; 
+                let y = event.beta;  
+
+                if (x !== null && y !== null) {
+                    let posX = Math.min(Math.max(((x + 45) / 90) * 100, 0), 100);
+                    let posY = Math.min(Math.max(((y - 20) / 60) * 100, 0), 100);
+
+                    document.documentElement.style.setProperty('--holo-x', `${posX}%`);
+                    document.documentElement.style.setProperty('--holo-y', `${posY}%`);
+                }
+            });
+        }
+
+        idCard.addEventListener('mousemove', (e) => {
+            const rect = idCard.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            document.documentElement.style.setProperty('--holo-x', `${x}%`);
+            document.documentElement.style.setProperty('--holo-y', `${y}%`);
+        });
     }
+</script>
 
-    html, body {
-      width: 100%;
-      min-height: 100vh;
-      background-color: var(--bg-body);
-      color: var(--text-main);
-      overflow-x: hidden;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .app-viewport {
-      width: 100%;
-      max-width: 430px;
-      margin: 0 auto;
-      min-height: 100vh;
-      background: var(--bg-card);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      padding-top: max(16px, env(safe-area-inset-top));
-      padding-bottom: max(90px, env(safe-area-inset-bottom));
-    }
-
-    /* Nagłówek Profilu */
-    .header {
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--bg-card);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-    }
-
-    .avatar-box {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: linear-gradient(135deg, var(--accent), #7c3aed);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 1.1rem;
-      border: 2px solid var(--border-color);
-    }
-
-    .avatar-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .user-text h2 { font-size: 1.1rem; font-weight: 700; }
-    .user-text p { font-size: 0.75rem; color: var(--text-muted); }
-
-    .icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-body);
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-
-    /* Sekcja BLIK */
-    .quick-blik-section {
-      padding: 16px 20px;
-      background: var(--bg-body);
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .blik-banner {
-      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-      color: white;
-      border-radius: 20px;
-      padding: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    }
-
-    .blik-logo {
-      font-weight: 900;
-      font-size: 1.4rem;
-      color: #ffffff;
-    }
-
-    .blik-btn {
-      background: var(--accent-blik);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
-    }
-
-    /* Zawartość przewijana */
-    .scroll-content {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-
-    .section-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .add-link { color: var(--accent); cursor: pointer; }
-
-    /* Karty */
-    .card-list { display: flex; flex-direction: column; gap: 14px; }
-
-    .card-item {
-      padding: 20px;
-      border-radius: 20px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--card-shadow);
-      cursor: pointer;
-    }
-
-    .card-blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
-    .card-green { background: linear-gradient(135deg, #059669, #047857); }
-    .card-purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
-
-    .card-type { font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; }
-    .card-name { font-size: 1.2rem; font-weight: 700; margin: 4px 0 16px 0; }
-    .card-number { font-family: monospace; font-size: 0.95rem; opacity: 0.9; }
-
-    /* Historia */
-    .history-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .history-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 16px;
-      background: var(--bg-body);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-    }
-
-    .history-info h4 { font-size: 0.9rem; font-weight: 600; }
-    .history-info p { font-size: 0.75rem; color: var(--text-muted); }
-    .history-amount { font-weight: 700; font-size: 0.95rem; }
-
-    /* Dolny Pasek */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      w
+</body>
+</html>
