@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mBank Quantum 2026</title>
+    <!-- Styl pozostał spójny z poprzednim projektem -->
+    <style>
+        :root { --accent-blue: #00f0ff; --bg-main: #030712; --text-main: #f9fafb; --card-bg: rgba(17, 24, 39, 0.7); }
+        body { font-family: sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .app-viewport { width: 100%; max-width: 400px; height: 90vh; background: #111; border-radius: 40px; padding: 20px; overflow-y: auto; }
+        .btn-primary { width: 100%; padding: 15px; border-radius: 15px; border: none; background: var(--accent-blue); color: #000; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none; }
+        #avatar-preview { width: 100px; height: 100px; border-radius: 50%; background: #333; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; border: 2px solid var(--accent-blue); }
+        .input-box { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #222; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="app-viewport">
+    <!-- EKRAN LOGOWANIA -->
+    <div id="login-screen">
+        <h2 id="login-title">Logowanie wstępne</h2>
+        <p id="login-msg">Wpisz hasło, aby aktywować Face ID.</p>
+        <input type="password" id="passInput" class="input-box" placeholder="Hasło">
+        <button class="btn-primary" onclick="checkPassword()">Zaloguj</button>
+        
+        <div id="face-id-section" class="hidden" style="text-align: center; margin-top: 30px;">
+            <div style="font-size: 50px; cursor: pointer;" onclick="triggerFaceID()">👁️‍🗨️</div>
+            <p>Kliknij, aby zalogować przez Face ID</p>
+        </div>
+    </div>
+
+    <!-- EKRAN PROFILU (Edycja) -->
+    <div id="app-screen" class="hidden">
+        <h1>Profil</h1>
+        <div id="avatar-preview"></div>
+        <input type="file" id="fileInput" accept="image/*" onchange="previewImage(event)">
+        <input type="text" id="editName" class="input-box" placeholder="Imię i nazwisko">
+        <input type="date" id="editBirth" class="input-box">
+        <button class="btn-primary" onclick="saveProfile()">Zapisz zmiany</button>
+        <button class="btn-primary" style="background: #ff4444;" onclick="logout()">Wyloguj</button>
+    </div>
+</div>
+
+<script>
+    let isInitialized = false; // Czy hasło było już podane?
+
+    // LOGOWANIE
+    function checkPassword() {
+        const pass = document.getElementById('passInput').value;
+        if (pass === "1234") { // Przykładowe hasło
+            isInitialized = true;
+            showApp();
+            document.getElementById('login-title').innerText = "Witaj ponownie";
+            document.getElementById('face-id-section').classList.remove('hidden');
+        } else {
+            alert("Błędne hasło (podpowiedź: 1234)");
+        }
+    }
+
+    function triggerFaceID() {
+        if (isInitialized) {
+            alert("Weryfikacja Face ID przebiegła pomyślnie!");
+            showApp();
+        }
+    }
+
+    function showApp() {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+    }
+
+    function logout() {
+        document.getElementById('app-screen').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    // EDYCJA PROFILU
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const output = document.getElementById('avatar-preview');
+            output.style.backgroundImage = `url('${reader.result}')`;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function saveProfile() {
+        const name = document.getElementById('editName').value;
+        alert("Zapisano: " + name);
+        // Tutaj logika zapisu do bazy/obiektu
+    }
+</script>
+
+</body>
+</html>
