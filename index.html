@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>mBank - Bankowość mobilna</title>
+    <style>
+        :root {
+            --mbank-red: #ec0028;
+            --mbank-red-dark: #cc0023;
+            --mbank-bg: #f3f3f3;
+            --mbank-card-bg: #ffffff;
+            --mbank-text: #1a1a1a;
+            --mbank-text-gray: #767676;
+            --mbank-border: #e0e0e0;
+            --modal-bg: #ffffff;
+            --radius-card: 16px;
+            --radius-btn: 12px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body.dark-mode {
+            --mbank-bg: #121212;
+            --mbank-card-bg: #1e1e1e;
+            --mbank-text: #e0e0e0;
+            --mbank-text-gray: #a0a0a0;
+            --mbank-border: #2c2c2c;
+            --modal-bg: #1e1e1e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+        }
+
+        body {
+            font-family: var(--font);
+            background-color: #000000;
+            color: var(--mbank-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 860px;
+            background-color: var(--mbank-bg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            transition: background-color 0.3s ease;
+        }
+
+        @media (min-width: 420px) {
+            .phone-frame {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+
+        /* Nagłówek mBanku */
+        .mb-header {
+            background-color: var(--mbank-card-bg);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--mbank-border);
+            z-index: 10;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-profile-trigger {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--mbank-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            font-size: 14px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .user-profile-trigger img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mb-logo {
+            font-weight: 900;
+            font-size: 22px;
+            color: var(--mbank-red);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .mb-logo span {
+            color: var(--mbank-text);
+        }
+
+        .mb-header-actions {
+            display: flex;
+            gap: 16px;
+            font-size: 18px;
+            color: var(--mbank-text);
+            align-items: center;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* Główny kontener aplikacji */
+        .mb-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+            scrollbar-width: none;
+        }
+        .mb-content::-webkit-scrollbar { display: none; }
+
+        /* Panel stanu konta w stylu mBanku */
+        .account-card {
+            background-color: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .account-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: var(--mbank-red);
+        }
+
+        .acc-type {
+            font-size: 12px;
+            color: var(--mbank-text-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .acc-number-short {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+            margin-top: 2px;
+            font-family: monospace;
+        }
+
+        .acc-balance {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--mbank-text);
+            margin: 12px 0 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* Ikony skrótów pod saldem */
+        .mb-shortcuts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .shortcut-btn {
+            background: var(--mbank-card-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: var(--radius-btn);
+            padding: 12px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .shortcut-btn:active {
+            opacity: 0.7;
+        }
+
+        .shortcut-icon {
+            font-size: 20px;
+            color: var(--mbank-red);
+        }
+
+        .shortcut-btn span:last-child {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--mbank-text);
+            text-align: center;
+        }
+
+        /* Sekcja kart płatniczych mBanku */
+        .section-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--mbank-text);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mb-card-slider {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+            margin-bottom: 16px;
+        }
+        .mb-card-slider::-webkit-scrollbar { display: none; }
+
+        .virtual-card {
+            min-width: 280px;
+            height: 165px;
+            border-radius: var(--radius-card);
+            background: linear-gradient(135deg, #2b2b2b 0%, #111111 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .virtual-card:active {
+            transform: scale(0.97);
+        }
+
+        .virtual-card.red {
+            background: linear-gradient(135deg, #ec0028 0%, #900018 100%);
+        }
+
+        .vcard-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.85;
+            text-transform: uppercase;
+        }
+
+        .vcard-number {
+            font-family: monospace;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .vcard-bottom {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        /* Historia transakcji */
+        .history-box {
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 4px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .trans-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--mbank-border);
+            cursor: pointer;
+        }
+        .trans-item:last-child { border-bottom: none; }
+        .trans-item:active { opacity: 0.6; }
+
+        .trans-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--mbank-text);
+        }
+        .trans-sub {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+            margin-top: 2px;
+        }
+
+        .trans-sum {
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .trans-sum.plus { color: #00875a; }
+        .trans-sum.minus { color: var(--mbank-text); }
+
+        /* Formularz przelewu */
+        .mb-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--mbank-border);
+            background-color: var(--mbank-card-bg);
+            color: var(--mbank-text);
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+        .mb-input:focus {
+            border-color: var(--mbank-red);
+            outline: none;
+        }
+
+        /* Kod BLIK (2 minuty) */
+        .blik-display-card {
+            text-align: center;
+            padding: 24px 20px;
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-top: 10px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .blik-code-text {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--mbank-red);
+            letter-spacing: 4px;
+            margin: 12px 0;
+            font-family: monospace;
+        }
+        .blik-timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .blik-circle-timer {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .blik-circle-timer svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .blik-circle-timer circle {
+            fill: none;
+            stroke-width: 3.5;
+        }
+        .blik-circle-timer .bg-circle {
+            stroke: #eee;
+        }
+        body.dark-mode .blik-circle-timer .bg-circle {
+            stroke: #333;
+        }
+        .blik-circle-timer .progress-circle {
+            stroke: var(--mbank-red);
+            stroke-dasharray: 125.6;
+            stroke-dashoffset: 0;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        .blik-seconds-text {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--mbank-text);
+        }
+
+        /* Podzakładki w Płatnościach */
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .sub-tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: var(--mbank-card-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: var(--radius-btn);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--mbank-text-gray);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .sub-tab-btn.active {
+            background: var(--mbank-red);
+            color: white;
+            border-color: var(--mbank-red);
+        }
+        .sub-view {
+            display: none;
+        }
+        .sub-view.active {
+            display: block;
+        }
+
+        /* Modal Szczegółów Transakcji / Karty / Profilu */
+        #trans-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            backdrop-filter: blur(2px);
+        }
+        .trans-modal-content {
+            background: var(--modal-bg);
+            width: 100%;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            border-bottom: 1px solid var(--mbank-border);
+            padding-bottom: 8px;
+        }
+        .modal-row span:first-child { color: var(--mbank-text-gray); font-weight: 600; }
+        .modal-row span:last-child { color: var(--mbank-text); font-weight: 700; text-align: right; }
+
+        /* Dolny pasek nawigacji */
+        .mb-navbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: var(--mbank-card-bg);
+            border-top: 1px solid var(--mbank-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 20;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--mbank-text-gray);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--mbank-red);
+        }
+
+        .nav-item span:first-child {
+            font-size: 20px;
+        }
+
+        /* Ekran logowania / PIN */
+        #auth-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: var(--modal-bg);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .auth-logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--mbank-red);
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+        }
+        .auth-logo span { color: var(--mbank-text); }
+
+        .auth-avatar {
+            width: 72px;
+            height: 72px;
+            background-color: var(--mbank-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 24px 0 12px;
+            color: var(--mbank-text);
+            overflow: hidden;
+            border: 2px solid var(--mbank-red);
+        }
+
+        .auth-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--mbank-red);
+            background-color: transparent;
+        }
+        .pin-dot.filled {
+            background-color: var(--mbank-red);
+        }
+        .pin-dot.empty {
+            background-color: transparent;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 260px;
+        }
+
+        .key-btn {
+            background: var(--mbank-border);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--mbank-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .key-btn:active { opacity: 0.7; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+    <!-- EKRAN LOGOWANIA / PIN -->
+    <div id="auth-overlay">
+        <div class="auth-logo">m<span>Bank</span></div>
+        <p style="font-size: 13px; color: var(--mbank-text-gray);" id="auth-username-label">Witaj, Jan Kowalski</p>
+        
+        <div class="auth-avatar" id="auth-avatar-container">👤</div>
+        <p style="font-size: 12px; font-weight: 600;">Wpisz PIN do aplikacji</p>
+
+        <div class="pin-dots">
+            <div class="pin-dot empty" id="dot-0"></div>
+            <div class="pin-dot empty" id="dot-1"></div>
+            <div class="pin-dot empty" id="dot-2"></div>
+            <div class="pin-dot empty" id="dot-3"></div>
+        </div>
+
+        <div class="keypad">
+            <button class="key-btn" onclick="handlePinInput('1')">1</button>
+            <button class="key-btn" onclick="handlePinInput('2')">2</button>
+            <button class="key-btn" onclick="handlePinInput('3')">3</button>
+            <button class="key-btn" onclick="handlePinInput('4')">4</button>
+            <button class="key-btn" onclick="handlePinInput('5')">5</button>
+            <button class="key-btn" onclick="handlePinInput('6')">6</button>
+            <button class="key-btn" onclick="handlePinInput('7')">7</button>
+            <button class="key-btn" onclick="handlePinInput('8')">8</button>
+            <button class="key-btn" onclick="handlePinInput('9')">9</button>
+            <button class="key-btn" style="background:transparent;" onclick="resetPin()"></button>
+            <button class="key-btn" onclick="handlePinInput('0')">0</button>
+            <button class="key-btn" style="background:transparent; font-size: 16px;" onclick="backspacePin()">⌫</button>
+        </div>
+    </div>
+
+    <!-- NAGŁÓWEK APLIKACJI -->
+    <header class="mb-header">
+        <div class="header-left">
+            <div class="user-profile-trigger" id="header-avatar-btn" onclick="openProfileModal()" title="Profil użytkownika">👤</div>
+            <div class="mb-logo">m<span>Bank</span></div>
+        </div>
+        <div class="mb-header-actions">
+            <button class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+            <span>🔍</span>
+            <span>💬</span>
+        </div>
+    </header>
+
+    <!-- ZAWARTOŚĆ -->
+    <div class="mb-content">
+
+        <!-- PULPIT -->
+        <div id="tab-pulpit" class="view-section active">
+            
+            <div class="account-card">
+                <div class="acc-type">eKonto osobiste</div>
+                <div class="acc-number-short">PL 49 1140 2004 0000 3002 4511 8921</div>
+                <div class="acc-balance" id="balance-display">14 250,80 PLN</div>
+            </div>
+
+            <!-- Skróty operacji mBanku -->
+            <div class="mb-shortcuts">
+                <button class="shortcut-btn" onclick="goToTransferTab()">
+                    <span class="shortcut-icon">💸</span>
+                    <span>Przelew</span>
+                </button>
+                <button class="shortcut-btn" onclick="goToBlikTab()">
+                    <span class="shortcut-icon">📱</span>
+                    <span>BLIK</span>
+                </button>
+                <button class="shortcut-btn" onclick="promptAddMoney()">
+                    <span class="shortcut-icon">⚡</span>
+                    <span>Doładuj</span>
+                </button>
+                <button class="shortcut-btn" onclick="switchTab(3, document.querySelectorAll('.nav-item')[3])">
+                    <span class="shortcut-icon">❖</span>
+                    <span>Więcej</span>
+                </button>
+            </div>
+
+            <div class="section-header">Twoje karty (kliknij, aby zobaczyć szczegóły)</div>
+            <div class="mb-card-slider">
+                <div class="virtual-card red" onclick="showCardDetails('debit')">
+                    <div class="vcard-top">
+                        <span>Debetowa Mastercard</span>
+                        <span>PLN</span>
+                    </div>
+                    <div class="vcard-number">5392 7812 3490 4021</div>
+                    <div class="vcard-bottom">
+                        <span id="card-holder-debit">Jan Kowalski</span>
+                        <span>08/29</span>
+                    </div>
+                </div>
+                <div class="virtual-card" onclick="showCardDetails('credit')">
+                    <div class="vcard-top">
+                        <span>Kredytowa Visa</span>
+                        <span>EUR</span>
+                    </div>
+                    <div class="vcard-number">4211 5589 1234 9910</div>
+                    <div class="vcard-bottom">
+                        <span id="card-holder-credit">Jan Kowalski</span>
+                        <span>01/27</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <span>Historia</span>
+                <span style="font-size: 11px; color: var(--mbank-red); font-weight: 600; cursor: pointer;">Wszystkie</span>
+            </div>
+            
+            <div class="history-box" id="history-container">
+                <!-- Historia wstrzykiwana dynamicznie z localStorage -->
+            </div>
+
+        </div>
+
+        <!-- PŁATNOŚCI -->
+        <div id="tab-platnosci" class="view-section">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="btn-sub-przelew" onclick="switchSubTab('przelew')">Przelew</button>
+                <button class="sub-tab-btn" id="btn-sub-blik" onclick="switchSubTab('blik')">Kod BLIK</button>
+            </div>
+
+            <!-- Widok Przelewu -->
+            <div id="sub-view-przelew" class="sub-view active">
+                <div class="section-header">Przelew na konto</div>
+                <div class="account-card">
+                    <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Odbiorca</label>
+                    <input type="text" id="transfer-name" class="mb-input" placeholder="np. Jan Nowak">
+                    
+                    <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Numer konta</label>
+                    <input type="text" id="transfer-acc" class="mb-input" placeholder="PL 00 0000 0000 0000 0000 0000">
+                    
+                    <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Kwota (PLN)</label>
+                    <input type="number" id="transfer-amount" class="mb-input" placeholder="0.00">
+
+                    <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer;" onclick="executeTransfer()">Wyślij przelew</button>
+                </div>
+            </div>
+
+            <!-- Widok BLIK -->
+            <div id="sub-view-blik" class="sub-view">
+                <div class="section-header">Kod BLIK</div>
+                <div class="blik-display-card">
+                    <p style="font-size: 11px; color: var(--mbank-text-gray);">Jednorazowy kod do płatności</p>
+                    <div class="blik-code-text" id="blik-code-display">739 104</div>
+                    <div class="blik-timer-container">
+                        <div class="blik-circle-timer">
+                            <svg viewBox="0 0 50 50">
+                                <circle class="bg-circle" cx="25" cy="25" r="20"></circle>
+                                <circle class="progress-circle" id="blik-progress-circle" cx="25" cy="25" r="20"></circle>
+                            </svg>
+                            <div class="blik-seconds-text" id="blik-sec-text">120</div>
+                        </div>
+                        <span style="font-size: 11px; color: var(--mbank-text-gray);">Ważność kodu (2 min)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANSE / KONTROLER -->
+        <div id="tab-finanse" class="view-section">
+            <div class="section-header">Moje finanse</div>
+            
+            <div class="account-card">
+                <div class="acc-type">Wydatki w tym miesiącu (Przelewy wychodzące)</div>
+                <div class="acc-balance" id="finances-expenses-display" style="font-size: 26px;">2 410,50 PLN</div>
+                <div style="background: var(--mbank-border); height: 6px; border-radius: 3px; margin-top: 14px; overflow: hidden;">
+                    <div style="width: 45%; background: var(--mbank-red); height: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="account-card" style="margin-top: 12px;">
+                <div class="acc-type">Zarobione w tym miesiącu (Przelew przychodzące)</div>
+                <div class="acc-balance" id="finances-income-display" style="font-size: 26px; color: #00875a;">6 800,00 PLN</div>
+            </div>
+        </div>
+
+        <!-- USŁUGI -->
+        <div id="tab-uslugi" class="view-section">
+            <div class="section-header">Usługi i wnioski</div>
+            <div class="account-card" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 13px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid var(--mbank-border);">Wniosek o pożyczkę gotówkową</div>
+                <div style="font-size: 13px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid var(--mbank-border);">Ubezpieczenia podróżne</div>
+                <div style="font-size: 13px; font-weight: 600; padding: 8px 0; color: var(--mbank-red); cursor: pointer;" onclick="clearAppData()">Zresetuj dane i wyloguj</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL SZCZEGÓŁÓW TRANSAKCJI / KARTY / PROFILU -->
+    <div id="trans-modal" onclick="closeDetails(event)">
+        <div class="trans-modal-content" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <h3 style="font-size: 16px; font-weight: 800;" id="modal-title">Szczegóły</h3>
+                <span style="font-size: 20px; cursor: pointer; color: var(--mbank-text-gray);" onclick="closeDetailsDirect()">✕</span>
+            </div>
+            <div id="modal-body-content" style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Wstrzykiwane dynamicznie -->
+            </div>
+            <button style="width: 100%; background: var(--mbank-border); color: var(--mbank-text); border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; margin-top: 8px;" onclick="closeDetailsDirect()">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- DOLNA NAWIGACJA -->
+    <nav class="mb-navbar">
+        <button class="nav-item active" onclick="switchTab(0, this)">
+            <span>🏠</span>
+            Pulpit
+        </button>
+        <button class="nav-item" onclick="switchTab(1, this)">
+            <span>💸</span>
+            Płatności
+        </button>
+        <button class="nav-item" onclick="switchTab(2, this)">
+            <span>📊</span>
+            Finanse
+        </button>
+        <button class="nav-item" onclick="switchTab(3, this)">
+            <span>✨</span>
+            Usługi
+        </button>
+    </nav>
+
+</div>
+
+<script>
+    let currentPinInput = "";
+    let userBalance = 14250.80;
+    let totalExpenses = 2410.50;
+    let totalIncome = 6800.00;
+    let transactions = [];
+    let blikInterval = null;
+    const maxBlikTime = 120;
+
+    // Dane użytkownika i kart
+    let userData = {
+        name: "Jan Kowalski",
+        avatarUrl: "", // puste oznacza domyślną ikonę tekstową
+        birthDate: "12.04.1992",
+        pesel: "92041288193"
+    };
+
+    const cardData = {
+        debit: {
+            title: "Debetowa Mastercard",
+            holder: "Jan Kowalski",
+            pesel: "92041288193",
+            birthDate: "12.04.1992",
+            number: "5392 7812 3490 4021",
+            expiry: "08/29",
+            cvv: "482",
+            limit: "15 000,00 PLN",
+            status: "Aktywna"
+        },
+        credit: {
+            title: "Kredytowa Visa",
+            holder: "Jan Kowalski",
+            pesel: "92041288193",
+            birthDate: "12.04.1992",
+            number: "4211 5589 1234 9910",
+            expiry: "01/27",
+            cvv: "912",
+            limit: "25 000,00 EUR",
+            status: "Aktywna"
+        }
+    };
+
+    // Inicjalizacja stanu z localStorage po załadowaniu strony
+    window.addEventListener('DOMContentLoaded', () => {
+        loadState();
+    });
+
+    function loadState() {
+        // Wczytaj dane użytkownika
+        const savedUser = localStorage.getItem('mbank_user_data');
+        if (savedUser !== null) {
+            try {
+                userData = JSON.parse(savedUser);
+            } catch(e) {}
+        }
+        
+        // Zsynchronizuj imię i datę urodzenia w kartach
+        cardData.debit.holder = userData.name;
+        cardData.debit.birthDate = userData.birthDate;
+        cardData.credit.holder = userData.name;
+        cardData.credit.birthDate = userData.birthDate;
+
+        document.getElementById('card-holder-debit').innerText = userData.name;
+        document.getElementById('card-holder-credit').innerText = userData.name;
+
+        // Zaktualizuj ekrany logowania i nagłówek awatarem/nazwiskiem
+        updateUserUI();
+
+        // Wczytaj saldo
+        const savedBalance = localStorage.getItem('mbank_balance');
+        if (savedBalance !== null) {
+            userBalance = parseFloat(savedBalance);
+        }
+
+        // Wczytaj wydatki i przychody
+        const savedExpenses = localStorage.getItem('mbank_expenses');
+        if (savedExpenses !== null) {
+            totalExpenses = parseFloat(savedExpenses);
+        }
+
+        const savedIncome = localStorage.getItem('mbank_income');
+        if (savedIncome !== null) {
+            totalIncome = parseFloat(savedIncome);
+        }
+
+        updateBalanceUI();
+        updateFinancesUI();
+
+        // Wczytaj motyw
+        const savedTheme = localStorage.getItem('mbank_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-btn').innerText = "☀️";
+        }
+
+        // Wczytaj historię
+        const savedTrans = localStorage.getItem('mbank_transactions');
+        if (savedTrans !== null) {
+            transactions = JSON.parse(savedTrans);
+        } else {
+            // Domyślne transakcje startowe
+            transactions = [
+                { title: "Biedronka #412", recipient: "Sklepy spożywcze", amount: "-45,20 PLN", rawAmount: 45.20, isPlus: false, date: "Dzisiaj, 13:20", account: "Karta Mastercard (4021)" },
+                { title: "Wynagrodzenie za pracę", recipient: "Pracodawca Sp. z o.o.", amount: "+6 800,00 PLN", rawAmount: 6800.00, isPlus: true, date: "Wczoraj", account: "PL 12 1050 1445 0000 0090 1234 5678" },
+                { title: "Allegro.pl", recipient: "Allegro Pay Sp. z o.o.", amount: "-129,99 PLN", rawAmount: 129.99, isPlus: false, date: "3 dni temu", account: "Kod BLIK" }
+            ];
+            saveState();
+        }
+        renderHistory();
+    }
+
+    function saveState() {
+        localStorage.setItem('mbank_user_data', JSON.stringify(userData));
+        localStorage.setItem('mbank_balance', userBalance);
+        localStorage.setItem('mbank_expenses', totalExpenses);
+        localStorage.setItem('mbank_income', totalIncome);
+        localStorage.setItem('mbank_transactions', JSON.stringify(transactions));
+    }
+
+    function updateUserUI() {
+        // Ekran logowania
+        document.getElementById('auth-username-label').innerText = `Witaj, ${userData.name}`;
+        const authAvatar = document.getElementById('auth-avatar-container');
+        if (userData.avatarUrl && userData.avatarUrl.trim() !== "") {
+            authAvatar.innerHTML = `<img src="${userData.avatarUrl}" alt="Avatar" onerror="this.onerror=null; this.parentElement.innerHTML='👤';">`;
+        } else {
+            authAvatar.innerHTML = `👤`;
+        }
+
+        // Nagłówek
+        const headerAvatar = document.getElementById('header-avatar-btn');
+        if (userData.avatarUrl && userData.avatarUrl.trim() !== "") {
+            headerAvatar.innerHTML = `<img src="${userData.avatarUrl}" alt="Avatar" onerror="this.onerror=null; this.parentElement.innerHTML='👤';">`;
+        } else {
+            headerAvatar.innerHTML = `👤`;
+        }
+    }
+
+    function updateBalanceUI() {
+        document.getElementById('balance-display').innerText = userBalance.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+    }
+
+    function updateFinancesUI() {
+        document.getElementById('finances-expenses-display').innerText = totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+        document.getElementById('finances-income-display').innerText = totalIncome.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+    }
+
+    function renderHistory() {
+        const historyBox = document.getElementById('history-container');
+        historyBox.innerHTML = '';
+        transactions.forEach((tx) => {
+            const item = document.createElement('div');
+            item.className = 'trans-item';
+            item.innerHTML = `
+                <div>
+                    <div class="trans-title">${tx.title}</div>
+                    <div class="trans-sub">${tx.date}</div>
+                </div>
+                <div class="trans-sum ${tx.isPlus ? 'plus' : 'minus'}">${tx.amount}</div>
+            `;
+            item.onclick = function() {
+                showTransactionDetails(tx.title, tx.recipient, tx.amount, tx.date, tx.account);
+            };
+            historyBox.appendChild(item);
+        });
+    }
+
+    // --- TRYB CIEMNY / JASNY ---
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('theme-btn');
+        body.classList.toggle('dark-mode');
+        if (body.classList.contains('dark-mode')) {
+            btn.innerText = "☀️";
+            localStorage.setItem('mbank_theme', 'dark');
+        } else {
+            btn.innerText = "🌙";
+            localStorage.setItem('mbank_theme', 'light');
+        }
+    }
+
+    // --- PODZAKŁADKI W PŁATNOŚCIACH ---
+    function switchSubTab(sub) {
+        document.getElementById('sub-view-przelew').classList.remove('active');
+        document.getElementById('sub-view-blik').classList.remove('active');
+        document.getElementById('btn-sub-przelew').classList.remove('active');
+        document.getElementById('btn-sub-blik').classList.remove('active');
+
+        if (sub === 'przelew') {
+            document.getElementById('sub-view-przelew').classList.add('active');
+            document.getElementById('btn-sub-przelew').classList.add('active');
+        } else {
+            document.getElementById('sub-view-blik').classList.add('active');
+            document.getElementById('btn-sub-blik').classList.add('active');
+            generateNewBlikCode();
+        }
+    }
+
+    function goToTransferTab() {
+        switchTab(1, document.querySelectorAll('.nav-item')[1]);
+        switchSubTab('przelew');
+    }
+
+    function goToBlikTab() {
+        switchTab(1, document.querySelectorAll('.nav-item')[1]);
+        switchSubTab('blik');
+    }
+
+    // --- PROFIL UŻYTKOWNIKA (MODAL) ---
+    function openProfileModal() {
+        document.getElementById('modal-title').innerText = "Profil użytkownika";
+        
+        const bodyHtml = `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--mbank-border); display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 32px; border: 2px solid var(--mbank-red);" id="profile-modal-avatar">
+                    ${userData.avatarUrl && userData.avatarUrl.trim() !== "" ? `<img src="${userData.avatarUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; this.parentElement.innerHTML='👤';">` : '👤'}
+                </div>
+            </div>
+            
+            <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Wybierz zdjęcie z galerii telefonu</label>
+            <input type="file" id="profile-gallery-file" class="mb-input" accept="image/*" onchange="handleGalleryUpload(event)">
+
+            <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Lub wklej link do zdjęcia (URL)</label>
+            <input type="text" id="profile-input-avatar" class="mb-input" placeholder="https://example.com/zdjecie.jpg" value="${userData.avatarUrl}">
+
+            <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Imię i nazwisko</label>
+            <input type="text" id="profile-input-name" class="mb-input" value="${userData.name}">
+
+            <div class="modal-row" style="margin-top: 4px;"><span>Data urodzenia (tylko do odczytu):</span><span>${userData.birthDate}</span></div>
+            <div class="modal-row"><span>PESEL:</span><span>${userData.pesel}</span></div>
+
+            <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; margin-top: 6px;" onclick="saveProfileChanges()">Zapisz zmiany</button>
+        `;
+        document.getElementById('modal-body-content').innerHTML = bodyHtml;
+        document.getElementById('trans-modal').style.display = 'flex';
+    }
+
+    function handleGalleryUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                userData.avatarUrl = e.target.result;
+                const urlInput = document.getElementById('profile-input-avatar');
+                if (urlInput) urlInput.value = e.target.result;
+                const modalAvatar = document.getElementById('profile-modal-avatar');
+                if (modalAvatar) {
+                    modalAvatar.innerHTML = `<img src="${userData.avatarUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; this.parentElement.innerHTML='👤';">`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function saveProfileChanges() {
+        const newName = document.getElementById('profile-input-name').value.trim();
+        const avatarUrlInput = document.getElementById('profile-input-avatar');
+        const newAvatar = avatarUrlInput ? avatarUrlInput.value.trim() : userData.avatarUrl;
+
+        if (!newName) {
+            alert("Imię i nazwisko nie może być puste.");
+            return;
+        }
+
+        userData.name = newName;
+        userData.avatarUrl = newAvatar;
+
+        // Aktualizuj karty
+        cardData.debit.holder = newName;
+        cardData.credit.holder = newName;
+        document.getElementById('card-holder-debit').innerText = newName;
+        document.getElementById('card-holder-credit').innerText = newName;
+
+        saveState();
+        updateUserUI();
+        closeDetailsDirect();
+        alert("Profil został zaktualizowany!");
+    }
+
+    // --- SZCZEGÓŁY KARTY (MODAL) ---
+    function showCardDetails(cardKey) {
+        const c = cardData[cardKey];
+        document.getElementById('modal-title').innerText = c.title;
+        
+        const bodyHtml = `
+            <div class="modal-row"><span>Posiadacz karty:</span><span>${c.holder}</span></div>
+            <div class="modal-row"><span>PESEL:</span><span>${c.pesel}</span></div>
+            <div class="modal-row"><span>Data urodzenia:</span><span>${c.birthDate}</span></div>
+            <div class="modal-row"><span>Numer karty:</span><span style="font-family: monospace;">${c.number}</span></div>
+            <div class="modal-row"><span>Data ważności:</span><span>${c.expiry}</span></div>
+            <div class="modal-row"><span>Kod CVV / CVC:</span><span>${c.cvv}</span></div>
+            <div class="modal-row"><span>Dostępny limit:</span><span>${c.limit}</span></div>
+            <div class="modal-row"><span>Status karty:</span><span style="color: #00875a;">${c.status}</span></div>
+        `;
+        document.getElementById('modal-body-content').innerHTML = bodyHtml;
+        document.getElementById('trans-modal').style.display = 'flex';
+    }
+
+    // --- SZCZEGÓŁY TRANSAKCJI (MODAL) ---
+    function showTransactionDetails(title, recipient, amount, date, account) {
+        document.getElementById('modal-title').innerText = title;
+        const bodyHtml = `
+            <div class="modal-row"><span>Kwota:</span><span>${amount}</span></div>
+            <div class="modal-row"><span>Odbiorca / Nadawca:</span><span>${recipient}</span></div>
+            <div class="modal-row"><span>Numer konta / Metoda:</span><span>${account}</span></div>
+            <div class="modal-row"><span>Data i godzina:</span><span>${date}</span></div>
+        `;
+        document.getElementById('modal-body-content').innerHTML = bodyHtml;
+        document.getElementById('trans-modal').style.display = 'flex';
+    }
+
+    function closeDetails(e) {
+        if (e.target.id === 'trans-modal') {
+            document.getElementById('trans-modal').style.display = 'none';
+        }
+    }
+
+    function closeDetailsDirect() {
+        document.getElementById('trans-modal').style.display = 'none';
+    }
+
+    // --- LOGOWANIE PIN ---
+    function handlePinInput(digit) {
+        if (currentPinInput.length < 4) {
+            currentPinInput += digit;
+            updatePinDots();
+        }
+        if (currentPinInput.length === 4) {
+            setTimeout(() => {
+                document.getElementById('auth-overlay').style.display = 'none';
+                startBlikTimer();
+            }, 300);
+        }
+    }
+
+    function backspacePin() {
+        if (currentPinInput.length > 0) {
+            currentPinInput = currentPinInput.slice(0, -1);
+            updatePinDots();
+        }
+    }
+
+    function resetPin() {
+        currentPinInput = "";
+        updatePinDots();
+    }
+
+    function updatePinDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById(`dot-${i}`);
+            if (i < currentPinInput.length) {
+                dot.classList.remove('empty');
+                dot.classList.add('filled');
+            } else {
+                dot.classList.remove('filled');
+                dot.classList.add('empty');
+            }
+        }
+    }
+
+    // --- DOŁADOWANIE WŁASNĄ KWOTĄ (Przychód / Przelew przychodzący) ---
+    function promptAddMoney() {
+        let input = prompt("Wpisz kwotę przelewu przychodzącego (np. 500 lub 1500.50):", "200");
+        if (input !== null) {
+            let amount = parseFloat(input.replace(',', '.'));
+            if (!isNaN(amount) && amount > 0) {
+                userBalance += amount;
+                totalIncome += amount;
+                updateBalanceUI();
+                updateFinancesUI();
+                
+                const formattedAmount = `+${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
+                transactions.unshift({
+                    title: "Przelew przychodzący",
+                    recipient: `${userData.name} (Zasilenie zewnętrzne)`,
+                    amount: formattedAmount,
+                    rawAmount: amount,
+                    isPlus: true,
+                    date: "Przed chwilą",
+                    account: "PL 49 1140 2004 0000 3002 4511 8921"
+                });
+                saveState();
+                renderHistory();
+            } else {
+                alert("Podano nieprawidłową kwotę.");
+            }
+        }
+    }
+
+    // --- WYKONANIE PRZELEWU NA KONTO (Wydatek / Przelew wychodzący) ---
+    function executeTransfer() {
+        const nameInput = document.getElementById('transfer-name').value.trim();
+        const accInput = document.getElementById('transfer-acc').value.trim() || "PL 11 2233 4455 6677 8899 0011 2233";
+        const amountInput = document.getElementById('transfer-amount').value.trim();
+        let amount = parseFloat(amountInput.replace(',', '.'));
+
+        if (!nameInput) {
+            alert("Podaj nazwę odbiorcy.");
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert("Podaj prawidłową kwotę przelewu.");
+            return;
+        }
+        if (amount > userBalance) {
+            alert("Brak wystarczających środków na koncie.");
+            return;
+        }
+
+        userBalance -= amount;
+        totalExpenses += amount;
+        updateBalanceUI();
+        updateFinancesUI();
+
+        const formattedAmount = `-${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
+        transactions.unshift({
+            title: `Przelew do: ${nameInput}`,
+            recipient: nameInput,
+            amount: formattedAmount,
+            rawAmount: amount,
+            isPlus: false,
+            date: "Przed chwilą",
+            account: accInput
+        });
+        saveState();
+        renderHistory();
+
+        document.getElementById('transfer-name').value = '';
+        document.getElementById('transfer-acc').value = '';
+        document.getElementById('transfer-amount').value = '';
+        
+        alert("Przelew wychodzący został zrealizowany pomyślnie!");
+        switchTab(0, document.querySelectorAll('.nav-item')[0]);
+    }
+
+    // --- NAWIGACJA ---
+    function switchTab(index, element) {
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(tab => tab.classList.remove('active'));
+
+        const targets = ['tab-pulpit', 'tab-platnosci', 'tab-finanse', 'tab-uslugi'];
+        document.getElementById(targets[index]).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // --- BLIK Z LICZNIKIEM OKRĄGŁYM (2 MINUTY) ---
+    function generateNewBlikCode() {
+        const code = Math.floor(100000 + Math.random() * 900000);
+        const formatted = String(code).replace(/(\d{3})(\d{3})/, '$1 $2');
+        const el = document.getElementById('blik-code-display');
+        if (el) el.innerText = formatted;
+    }
+
+    function startBlikTimer() {
+        generateNewBlikCode();
+        let timeLeft = maxBlikTime;
+        const circle = document.getElementById('blik-progress-circle');
+        const textSec = document.getElementById('blik-sec-text');
+        const circumference = 2 * Math.PI * 20;
+
+        if (blikInterval) clearInterval(blikInterval);
+
+        blikInterval = setInterval(() => {
+            timeLeft--;
+            
+            if (textSec) textSec.innerText = timeLeft;
+
+            if (circle) {
+                const offset = circumference - (timeLeft / maxBlikTime) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }
+
+            if (timeLeft <= 0) {
+                generateNewBlikCode();
+                timeLeft = maxBlikTime;
+            }
+        }, 1000);
+    }
+
+    function clearAppData() {
+        if (confirm("Czy na pewno chcesz zresetować dane aplikacji do ustawień początkowych?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
