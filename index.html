@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>mBank - Bankowość mobilna</title>
+    <style>
+        :root {
+            --mbank-red: #ec0028;
+            --mbank-red-dark: #cc0023;
+            --mbank-bg: #f3f3f3;
+            --mbank-card-bg: #ffffff;
+            --mbank-text: #1a1a1a;
+            --mbank-text-gray: #767676;
+            --mbank-border: #e0e0e0;
+            --modal-bg: #ffffff;
+            --radius-card: 16px;
+            --radius-btn: 12px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body.dark-mode {
+            --mbank-bg: #121212;
+            --mbank-card-bg: #1e1e1e;
+            --mbank-text: #e0e0e0;
+            --mbank-text-gray: #a0a0a0;
+            --mbank-border: #2c2c2c;
+            --modal-bg: #1e1e1e;
+        }
+
+        body.vip-mode {
+            --mbank-red: #ffd700;
+            --mbank-red-dark: #cca100;
+        }
+        body.vip-mode .account-card::before {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+        }
+
+        body {
+            font-family: var(--font);
+            background-color: #000000;
+            color: var(--mbank-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 860px;
+            background-color: var(--mbank-bg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            transition: background-color 0.3s ease;
+        }
+
+        @media (min-width: 420px) {
+            .phone-frame {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+
+        /* Ikony SVG style */
+        .icon-svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+        .icon-svg.large {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* Nagłówek mBanku */
+        .mb-header {
+            background-color: var(--mbank-card-bg);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--mbank-border);
+            z-index: 10;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-profile-trigger {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--mbank-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .user-profile-trigger img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mb-logo {
+            font-weight: 900;
+            font-size: 22px;
+            color: var(--mbank-red);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .mb-logo span {
+            color: var(--mbank-text);
+        }
+
+        .mb-header-actions {
+            display: flex;
+            gap: 16px;
+            color: var(--mbank-text);
+            align-items: center;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--mbank-text);
+            display: flex;
+            align-items: center;
+        }
+
+        /* Główny kontener aplikacji */
+        .mb-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+            scrollbar-width: none;
+        }
+        .mb-content::-webkit-scrollbar { display: none; }
+
+        /* Panel stanu konta */
+        .account-card {
+            background-color: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .account-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: var(--mbank-red);
+        }
+
+        .acc-type {
+            font-size: 12px;
+            color: var(--mbank-text-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .acc-number-short {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+            margin-top: 2px;
+            font-family: monospace;
+        }
+
+        .acc-balance {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--mbank-text);
+            margin: 12px 0 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* Ikony skrótów pod saldem */
+        .mb-shortcuts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .shortcut-btn {
+            background: var(--mbank-card-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: var(--radius-btn);
+            padding: 12px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .shortcut-btn:active {
+            opacity: 0.7;
+        }
+
+        .shortcut-icon {
+            color: var(--mbank-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .shortcut-btn span:last-child {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--mbank-text);
+            text-align: center;
+        }
+
+        /* Sekcja kart płatniczych */
+        .section-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--mbank-text);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mb-card-slider {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+            margin-bottom: 16px;
+        }
+        .mb-card-slider::-webkit-scrollbar { display: none; }
+
+        .virtual-card {
+            min-width: 280px;
+            height: 165px;
+            border-radius: var(--radius-card);
+            background: linear-gradient(135deg, #2b2b2b 0%, #111111 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .virtual-card:active {
+            transform: scale(0.97);
+        }
+
+        .virtual-card.red {
+            background: linear-gradient(135deg, var(--mbank-red) 0%, #900018 100%);
+        }
+
+        .vcard-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.85;
+            text-transform: uppercase;
+        }
+
+        .vcard-number {
+            font-family: monospace;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .vcard-bottom {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        /* Historia transakcji */
+        .history-box {
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 4px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .trans-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--mbank-border);
+            cursor: pointer;
+        }
+        .trans-item:last-child { border-bottom: none; }
+        .trans-item:active { opacity: 0.6; }
+
+        .trans-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--mbank-text);
+        }
+        .trans-sub {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+            margin-top: 2px;
+        }
+
+        .trans-sum {
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .trans-sum.plus { color: #00875a; }
+        .trans-sum.minus { color: var(--mbank-text); }
+
+        /* Formularz przelewu */
+        .mb-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--mbank-border);
+            background-color: var(--mbank-card-bg);
+            color: var(--mbank-text);
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+        .mb-input:focus {
+            border-color: var(--mbank-red);
+            outline: none;
+        }
+
+        /* Kod BLIK */
+        .blik-display-card {
+            text-align: center;
+            padding: 24px 20px;
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-top: 10px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .blik-code-text {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--mbank-red);
+            letter-spacing: 4px;
+            margin: 12px 0;
+            font-family: monospace;
+        }
+        .blik-timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .blik-circle-timer {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .blik-circle-timer svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .blik-circle-timer circle {
+            fill: none;
+            stroke-width: 3.5;
+        }
+        .blik-circle-timer .bg-circle {
+            stroke: #eee;
+        }
+        body.dark-mode .blik-circle-timer .bg-circle {
+            stroke: #333;
+        }
+        .blik-circle-timer .progress-circle {
+            stroke: var(--mbank-red);
+            stroke-dasharray: 125.6;
+            stroke-dashoffset: 0;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        .blik-seconds-text {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--mbank-text);
+        }
+
+        /* Podzakładki */
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .sub-tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: var(--mbank-card-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: var(--radius-btn);
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--mbank-text-gray);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .sub-tab-btn.active {
+            background: var(--mbank-red);
+            color: white;
+            border-color: var(--mbank-red);
+        }
+        .sub-view {
+            display: none;
+        }
+        .sub-view.active {
+            display: block;
+        }
+
+        /* Sklep i krypto */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .shop-card {
+            background: var(--mbank-card-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .shop-card:active {
+            transform: scale(0.96);
+        }
+        .shop-icon {
+            color: var(--mbank-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .shop-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--mbank-text);
+        }
+        .shop-desc {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+        }
+        .shop-price {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--mbank-red);
+            margin-top: 4px;
+        }
+
+        /* Interaktywna Zdrapka (Canvas) */
+        .scratch-container {
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+        }
+        .scratch-box {
+            position: relative;
+            width: 260px;
+            height: 120px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px dashed var(--mbank-border);
+            background: #fff;
+        }
+        .scratch-under {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fff3f3;
+            color: var(--mbank-text);
+            font-weight: 800;
+            font-size: 16px;
+        }
+        body.dark-mode .scratch-under {
+            background: #251a1a;
+        }
+        .scratch-canvas {
+            position: absolute;
+            inset: 0;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .scratch-counter-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--mbank-red);
+            background: rgba(236, 0, 40, 0.08);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Kółko i Krzyżyk w zakładce Gry */
+        .ttt-container {
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid var(--mbank-border);
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+        }
+        .ttt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 8px;
+            margin: 6px 0;
+        }
+        .ttt-cell {
+            background: var(--mbank-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ttt-cell:active {
+            opacity: 0.7;
+        }
+        .ttt-status {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--mbank-text-gray);
+            min-height: 18px;
+        }
+
+        /* Modal */
+        #trans-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            backdrop-filter: blur(2px);
+        }
+        .trans-modal-content {
+            background: var(--modal-bg);
+            width: 100%;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            border-bottom: 1px solid var(--mbank-border);
+            padding-bottom: 8px;
+        }
+        .modal-row span:first-child { color: var(--mbank-text-gray); font-weight: 600; }
+        .modal-row span:last-child { color: var(--mbank-text); font-weight: 700; text-align: right; }
+
+        /* Dolny pasek nawigacji */
+        .mb-navbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: var(--mbank-card-bg);
+            border-top: 1px solid var(--mbank-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 20;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--mbank-text-gray);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--mbank-red);
+        }
+
+        /* Ekran logowania / PIN */
+        #auth-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: var(--modal-bg);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .auth-logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--mbank-red);
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+        }
+        .auth-logo span { color: var(--mbank-text); }
+
+        .auth-avatar {
+            width: 72px;
+            height: 72px;
+            background-color: var(--mbank-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 24px 0 12px;
+            color: var(--mbank-text);
+            overflow: hidden;
+            border: 2px solid var(--mbank-red);
+        }
+
+        .auth-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--mbank-red);
+            background-color: transparent;
+        }
+        .pin-dot.filled {
+            background-color: var(--mbank-red);
+        }
+        .pin-dot.empty {
+            background-color: transparent;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 260px;
+        }
+
+        .key-btn {
+            background: var(--mbank-border);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--mbank-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .key-btn:active { opacity: 0.7; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+    <!-- EKRAN LOGOWANIA / PIN -->
+    <div id="auth-overlay">
+        <div class="auth-logo">m<span>Bank</span></div>
+        <p style="font-size: 13px; color: var(--mbank-text-gray);" id="auth-username-label">Witaj, Jan Kowalski</p>
+        
+        <div class="auth-avatar" id="auth-avatar-container">
+            <svg class="icon-svg large" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+        <p style="font-size: 12px; font-weight: 600;">Wpisz PIN do aplikacji</p>
+
+        <div class="pin-dots">
+            <div class="pin-dot empty" id="dot-0"></div>
+            <div class="pin-dot empty" id="dot-1"></div>
+            <div class="pin-dot empty" id="dot-2"></div>
+            <div class="pin-dot empty" id="dot-3"></div>
+        </div>
+
+        <div class="keypad">
+            <button class="key-btn" onclick="handlePinInput('1')">1</button>
+            <button class="key-btn" onclick="handlePinInput('2')">2</button>
+            <button class="key-btn" onclick="handlePinInput('3')">3</button>
+            <button class="key-btn" onclick="handlePinInput('4')">4</button>
+            <button class="key-btn" onclick="handlePinInput('5')">5</button>
+            <button class="key-btn" onclick="handlePinInput('6')">6</button>
+            <button class="key-btn" onclick="handlePinInput('7')">7</button>
+            <button class="key-btn" onclick="handlePinInput('8')">8</button>
+            <button class="key-btn" onclick="handlePinInput('9')">9</button>
+            <button class="key-btn" style="background:transparent;" onclick="resetPin()"></button>
+            <button class="key-btn" onclick="handlePinInput('0')">0</button>
+            <button class="key-btn" style="background:transparent; font-size: 16px;" onclick="backspacePin()">⌫</button>
+        </div>
+    </div>
+
+    <!-- NAGŁÓWEK APLIKACJI -->
+    <header class="mb-header">
+        <div class="header-left">
+            <div class="user-profile-trigger" id="header-avatar-btn" onclick="openProfileModal()" title="Profil użytkownika">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div class="mb-logo">m<span>Bank</span></div>
+        </div>
+        <div class="mb-header-actions">
+            <button class="theme-toggle-btn" id="theme-btn" onclick="toggleTheme()">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+    </header>
+
+    <!-- ZAWARTOŚĆ -->
+    <div class="mb-content">
+
+        <!-- PULPIT -->
+        <div id="tab-pulpit" class="view-section active">
+            
+            <div class="account-card">
+                <div class="acc-type">eKonto osobiste</div>
+                <div class="acc-number-short">PL 49 1140 2004 0000 3002 4511 8921</div>
+                <div class="acc-balance" id="balance-display">14 250,80 PLN</div>
+            </div>
+
+            <!-- Skróty operacji -->
+            <div class="mb-shortcuts">
+                <button class="shortcut-btn" onclick="goToTransferTab()">
+                    <span class="shortcut-icon"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></span>
+                    <span>Przelew</span>
+                </button>
+                <button class="shortcut-btn" onclick="goToBlikTab()">
+                    <span class="shortcut-icon"><svg class="icon-svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg></span>
+                    <span>BLIK</span>
+                </button>
+                <button class="shortcut-btn" onclick="promptAddMoney()">
+                    <span class="shortcut-icon"><svg class="icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></span>
+                    <span>Doładuj</span>
+                </button>
+                <button class="shortcut-btn" onclick="switchTab(3, document.querySelectorAll('.nav-item')[3])">
+                    <span class="shortcut-icon"><svg class="icon-svg" viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12"></line><line x1="12" y1="6" x2="12" y2="18"></line></svg></span>
+                    <span>Gry</span>
+                </button>
+            </div>
+
+            <div class="section-header">Twoje karty (kliknij, aby zobaczyć szczegóły)</div>
+            <div class="mb-card-slider">
+                <div class="virtual-card red" onclick="showCardDetails('debit')">
+                    <div class="vcard-top">
+                        <span>Debetowa Mastercard</span>
+                        <span>PLN</span>
+                    </div>
+                    <div class="vcard-number">5392 7812 3490 4021</div>
+                    <div class="vcard-bottom">
+                        <span id="card-holder-debit">Jan Kowalski</span>
+                        <span>08/29</span>
+                    </div>
+                </div>
+                <div class="virtual-card" onclick="showCardDetails('credit')">
+                    <div class="vcard-top">
+                        <span>Kredytowa Visa</span>
+                        <span>EUR</span>
+                    </div>
+                    <div class="vcard-number">4211 5589 1234 9910</div>
+                    <div class="vcard-bottom">
+                        <span id="card-holder-credit">Jan Kowalski</span>
+                        <span>01/27</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <span>Historia</span>
+                <span style="font-size: 11px; color: var(--mbank-red); font-weight: 600; cursor: pointer;">Wszystkie</span>
+            </div>
+            
+            <div class="history-box" id="history-container"></div>
+
+        </div>
+
+        <!-- PŁATNOŚCI -->
+        <div id="tab-platnosci" class="view-section">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="btn-sub-przelew" onclick="switchSubTab('przelew')">Przelew</button>
+                <button class="sub-tab-btn" id="btn-sub-blik" onclick="switchSubTab('blik')">Kod BLIK</button>
+            </div>
+
+            <div id="sub-view-przelew" class="sub-view active">
+                <div class="section-header">Przelew na konto</div>
+                <div class="account-card">
+                    <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Odbiorca</label>
+                    <input type="text" id="transfer-name" class="mb-input" placeholder="np. Jan Nowak">
+                    
+                    <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Numer konta</label>
+                    <input type="text" id="transfer-acc" class="mb-input" placeholder="PL 00 0000 0000 0000 0000 0000">
+                    
+                    <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Kwota (PLN)</label>
+                    <input type="number" id="transfer-amount" class="mb-input" placeholder="0.00">
+
+                    <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer;" onclick="executeTransfer()">Wyślij przelew</button>
+                </div>
+            </div>
+
+            <div id="sub-view-blik" class="sub-view">
+                <div class="section-header">Kod BLIK</div>
+                <div class="blik-display-card">
+                    <p style="font-size: 11px; color: var(--mbank-text-gray);">Jednorazowy kod do płatności</p>
+                    <div class="blik-code-text" id="blik-code-display">739 104</div>
+                    <div class="blik-timer-container">
+                        <div class="blik-circle-timer">
+                            <svg viewBox="0 0 50 50">
+                                <circle class="bg-circle" cx="25" cy="25" r="20"></circle>
+                                <circle class="progress-circle" id="blik-progress-circle" cx="25" cy="25" r="20"></circle>
+                            </svg>
+                            <div class="blik-seconds-text" id="blik-sec-text">120</div>
+                        </div>
+                        <span style="font-size: 11px; color: var(--mbank-text-gray);">Ważność kodu (2 min)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANSE -->
+        <div id="tab-finanse" class="view-section">
+            <div class="section-header">Moje finanse</div>
+            
+            <div class="account-card">
+                <div class="acc-type">Wydatki w tym miesiącu</div>
+                <div class="acc-balance" id="finances-expenses-display" style="font-size: 26px;">2 410,50 PLN</div>
+                <div style="background: var(--mbank-border); height: 6px; border-radius: 3px; margin-top: 14px; overflow: hidden;">
+                    <div style="width: 45%; background: var(--mbank-red); height: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="account-card" style="margin-top: 12px;">
+                <div class="acc-type">Zarobione w tym miesiącu</div>
+                <div class="acc-balance" id="finances-income-display" style="font-size: 26px; color: #00875a;">6 800,00 PLN</div>
+            </div>
+        </div>
+
+        <!-- GRY (Kółko i Krzyżyk - Zbalansowane AI) -->
+        <div id="tab-gry" class="view-section">
+            <div class="section-header">Centrum Rozrywki mBank</div>
+            
+            <div class="ttt-container">
+                <div style="font-size: 14px; font-weight: 800;">Kółko i Krzyżyk (Zbalansowane)</div>
+                <div style="font-size: 11px; color: var(--mbank-text-gray);">Wpisowe: 10 PLN | Wygrana: +50 PLN</div>
+                
+                <div class="ttt-status" id="ttt-status-text">Kliknij przycisk, aby rozpocząć grę</div>
+
+                <div class="ttt-grid" id="ttt-grid">
+                    <div class="ttt-cell" onclick="makeTttMove(0)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(1)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(2)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(3)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(4)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(5)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(6)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(7)"></div>
+                    <div class="ttt-cell" onclick="makeTttMove(8)"></div>
+                </div>
+
+                <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer;" onclick="startNewTttGame()">Nowa gra (-10 PLN)</button>
+            </div>
+        </div>
+
+        <!-- SKLEP / KRYPTO & ZDRAPKA -->
+        <div id="tab-sklep" class="view-section">
+            <div class="section-header">Sklep mBank & Krypto</div>
+            <div class="shop-grid">
+                <div class="shop-card" onclick="buyCoffee()">
+                    <div class="shop-icon"><svg class="icon-svg large" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg></div>
+                    <div class="shop-title">Kawa na mieście</div>
+                    <div class="shop-desc">Pyszne espresso latte</div>
+                    <div class="shop-price">-18,00 PLN</div>
+                </div>
+                <div class="shop-card" onclick="buyVip()">
+                    <div class="shop-icon"><svg class="icon-svg large" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
+                    <div class="shop-title">mBank VIP</div>
+                    <div class="shop-desc">Złoty motyw i prestiż</div>
+                    <div class="shop-price">-120,00 PLN</div>
+                </div>
+            </div>
+
+            <!-- Giełda Kryptowalut -->
+            <div class="account-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 14px; font-weight: 800;">Bitcoin (BTC) na żywo</div>
+                        <div id="btc-price" style="font-size: 22px; color: var(--mbank-red); font-weight: 800;">280 000,00 PLN</div>
+                    </div>
+                    <div id="btc-trend" style="font-size: 20px;">➡️</div>
+                </div>
+                
+                <div id="chart-container" style="height: 50px; display: flex; align-items: flex-end; gap: 2px; margin: 12px 0;"></div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button class="shortcut-btn" style="background: #cc0000; color: white;" onclick="tradeCrypto('buy')"><span>KUP</span></button>
+                    <button class="shortcut-btn" style="background: #00875a; color: white;" onclick="tradeCrypto('sell')"><span>SPRZEDAJ</span></button>
+                </div>
+            </div>
+            
+            <div class="account-card">
+                <div id="crypto-balance" style="font-size: 13px; font-weight: 600;">Posiadasz: 0.0000 BTC</div>
+                <div id="crypto-value" style="font-size: 13px; color: var(--mbank-text-gray); margin-top: 2px;">Wartość: 0,00 PLN</div>
+            </div>
+
+            <!-- Interaktywna Zdrapka -->
+            <div class="scratch-container">
+                <div style="font-size: 13px; font-weight: 700;">Szczęśliwa Zdrapka mBanku</div>
+                <div style="font-size: 11px; color: var(--mbank-text-gray);">Koszt: 20 PLN | 1/10 gwarantowana + 20% szans ekstra</div>
+                
+                <div class="scratch-counter-badge" id="scratch-counter-text">Do wygranej brakuje: 10 zdrapek</div>
+
+                <div class="scratch-box" id="scratch-box">
+                    <div class="scratch-under" id="scratch-result-text">KUP ZDRAPKĘ</div>
+                    <canvas class="scratch-canvas" id="scratch-canvas"></canvas>
+                </div>
+
+                <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 10px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer;" onclick="initNewScratch()">Kup nową zdrapkę (-20 PLN)</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="trans-modal" onclick="closeDetails(event)">
+        <div class="trans-modal-content" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <h3 style="font-size: 16px; font-weight: 800;" id="modal-title">Szczegóły</h3>
+                <span style="font-size: 20px; cursor: pointer; color: var(--mbank-text-gray);" onclick="closeDetailsDirect()">✕</span>
+            </div>
+            <div id="modal-body-content" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            <button style="width: 100%; background: var(--mbank-border); color: var(--mbank-text); border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; margin-top: 8px;" onclick="closeDetailsDirect()">Zamknij</button>
+        </div>
+    </div>
+
+    <!-- DOLNA NAWIGACJA -->
+    <nav class="mb-navbar">
+        <button class="nav-item active" onclick="switchTab(0, this)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Pulpit
+        </button>
+        <button class="nav-item" onclick="switchTab(1, this)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+            Płatności
+        </button>
+        <button class="nav-item" onclick="switchTab(2, this)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            Finanse
+        </button>
+        <button class="nav-item" onclick="switchTab(3, this)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M6 12h4m-2-2v4"></path><circle cx="15" cy="11" r="1"></circle><circle cx="18" cy="13" r="1"></circle></svg>
+            Gry
+        </button>
+        <button class="nav-item" onclick="switchTab(4, this)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            Sklep
+        </button>
+    </nav>
+
+</div>
+
+<script>
+    let currentPinInput = "";
+    let userBalance = 14250.80;
+    let totalExpenses = 2410.50;
+    let totalIncome = 6800.00;
+    let transactions = [];
+    let blikInterval = null;
+    const maxBlikTime = 120;
+
+    let scratchStreak = 0; 
+    let btcPrice = 280000.00;
+    let userBtc = 0;
+    let priceHistory = [280000];
+
+    // Stan gry Kółko i Krzyżyk (Zbalansowane AI)
+    let tttBoard = ["", "", "", "", "", "", "", "", ""];
+    let tttGameActive = false;
+    let tttPlayerTurn = true;
+
+    let userData = {
+        name: "Jan Kowalski",
+        avatarUrl: "",
+        birthDate: "12.04.1992",
+        pesel: "92041288193",
+        isVip: false
+    };
+
+    const cardData = {
+        debit: {
+            title: "Debetowa Mastercard",
+            holder: "Jan Kowalski",
+            pesel: "92041288193",
+            birthDate: "12.04.1992",
+            number: "5392 7812 3490 4021",
+            expiry: "08/29",
+            cvv: "482",
+            limit: "15 000,00 PLN",
+            status: "Aktywna"
+        },
+        credit: {
+            title: "Kredytowa Visa",
+            holder: "Jan Kowalski",
+            pesel: "92041288193",
+            birthDate: "12.04.1992",
+            number: "4211 5589 1234 9910",
+            expiry: "01/27",
+            cvv: "912",
+            limit: "25 000,00 EUR",
+            status: "Aktywna"
+        }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadState();
+        setupScratchCard();
+        updateScratchCounterUI();
+        startBtcSimulation();
+        renderTttBoard();
+    });
+
+    function loadState() {
+        const savedUser = localStorage.getItem('mbank_user_data');
+        if (savedUser !== null) {
+            try { userData = JSON.parse(savedUser); } catch(e) {}
+        }
+        
+        if (userData.isVip) {
+            document.body.classList.add('vip-mode');
+        }
+
+        cardData.debit.holder = userData.name;
+        cardData.credit.holder = userData.name;
+        document.getElementById('card-holder-debit').innerText = userData.name;
+        document.getElementById('card-holder-credit').innerText = userData.name;
+
+        updateUserUI();
+
+        const savedBalance = localStorage.getItem('mbank_balance');
+        if (savedBalance !== null) userBalance = parseFloat(savedBalance);
+
+        const savedExpenses = localStorage.getItem('mbank_expenses');
+        if (savedExpenses !== null) totalExpenses = parseFloat(savedExpenses);
+
+        const savedIncome = localStorage.getItem('mbank_income');
+        if (savedIncome !== null) totalIncome = parseFloat(savedIncome);
+
+        const savedStreak = localStorage.getItem('mbank_scratch_streak');
+        if (savedStreak !== null) scratchStreak = parseInt(savedStreak, 10);
+
+        const savedBtc = localStorage.getItem('mbank_user_btc');
+        if (savedBtc !== null) userBtc = parseFloat(savedBtc);
+
+        updateBalanceUI();
+        updateFinancesUI();
+        updateScratchCounterUI();
+        updateCryptoUI();
+
+        const savedTheme = localStorage.getItem('mbank_theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-btn').innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+        }
+
+        const savedTrans = localStorage.getItem('mbank_transactions');
+        if (savedTrans !== null) {
+            transactions = JSON.parse(savedTrans);
+        } else {
+            transactions = [
+                { title: "Biedronka #412", recipient: "Sklepy spożywcze", amount: "-45,20 PLN", rawAmount: 45.20, isPlus: false, date: "Dzisiaj, 13:20", account: "Karta Mastercard (4021)" },
+                { title: "Wynagrodzenie za pracę", recipient: "Pracodawca Sp. z o.o.", amount: "+6 800,00 PLN", rawAmount: 6800.00, isPlus: true, date: "Wczoraj", account: "PL 12 1050 1445 0000 0090 1234 5678" },
+                { title: "Allegro.pl", recipient: "Allegro Pay Sp. z o.o.", amount: "-129,99 PLN", rawAmount: 129.99, isPlus: false, date: "3 dni temu", account: "Kod BLIK" }
+            ];
+            saveState();
+        }
+        renderHistory();
+    }
+
+    function saveState() {
+        localStorage.setItem('mbank_user_data', JSON.stringify(userData));
+        localStorage.setItem('mbank_balance', userBalance);
+        localStorage.setItem('mbank_expenses', totalExpenses);
+        localStorage.setItem('mbank_income', totalIncome);
+        localStorage.setItem('mbank_scratch_streak', scratchStreak);
+        localStorage.setItem('mbank_user_btc', userBtc);
+        localStorage.setItem('mbank_transactions', JSON.stringify(transactions));
+    }
+
+    function updateUserUI() {
+        document.getElementById('auth-username-label').innerText = `Witaj, ${userData.name}`;
+        const authAvatar = document.getElementById('auth-avatar-container');
+        const headerAvatar = document.getElementById('header-avatar-btn');
+
+        if (userData.avatarUrl && userData.avatarUrl.trim() !== "") {
+            authAvatar.innerHTML = `<img src="${userData.avatarUrl}" alt="Avatar">`;
+            headerAvatar.innerHTML = `<img src="${userData.avatarUrl}" alt="Avatar">`;
+        } else {
+            authAvatar.innerHTML = `<svg class="icon-svg large" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            headerAvatar.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+        }
+    }
+
+    function updateBalanceUI() {
+        document.getElementById('balance-display').innerText = userBalance.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+    }
+
+    function updateFinancesUI() {
+        document.getElementById('finances-expenses-display').innerText = totalExpenses.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+        document.getElementById('finances-income-display').innerText = totalIncome.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+    }
+
+    function updateScratchCounterUI() {
+        let remaining = 10 - (scratchStreak % 10);
+        if (remaining === 10 && scratchStreak > 0) remaining = 0;
+        document.getElementById('scratch-counter-text').innerText = `Do wygranej brakuje: ${remaining} zdrapek`;
+    }
+
+    function renderHistory() {
+        const historyBox = document.getElementById('history-container');
+        historyBox.innerHTML = '';
+        transactions.forEach((tx) => {
+            const item = document.createElement('div');
+            item.className = 'trans-item';
+            item.innerHTML = `
+                <div>
+                    <div class="trans-title">${tx.title}</div>
+                    <div class="trans-sub">${tx.date}</div>
+                </div>
+                <div class="trans-sum ${tx.isPlus ? 'plus' : 'minus'}">${tx.amount}</div>
+            `;
+            item.onclick = function() {
+                showTransactionDetails(tx.title, tx.recipient, tx.amount, tx.date, tx.account);
+            };
+            historyBox.appendChild(item);
+        });
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('theme-btn');
+        body.classList.toggle('dark-mode');
+        if (body.classList.contains('dark-mode')) {
+            btn.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+            localStorage.setItem('mbank_theme', 'dark');
+        } else {
+            btn.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+            localStorage.setItem('mbank_theme', 'light');
+        }
+    }
+
+    function switchSubTab(sub) {
+        document.getElementById('sub-view-przelew').classList.remove('active');
+        document.getElementById('sub-view-blik').classList.remove('active');
+        document.getElementById('btn-sub-przelew').classList.remove('active');
+        document.getElementById('btn-sub-blik').classList.remove('active');
+
+        if (sub === 'przelew') {
+            document.getElementById('sub-view-przelew').classList.add('active');
+            document.getElementById('btn-sub-przelew').classList.add('active');
+        } else {
+            document.getElementById('sub-view-blik').classList.add('active');
+            document.getElementById('btn-sub-blik').classList.add('active');
+            generateNewBlikCode();
+        }
+    }
+
+    function goToTransferTab() {
+        switchTab(1, document.querySelectorAll('.nav-item')[1]);
+        switchSubTab('przelew');
+    }
+
+    function goToBlikTab() {
+        switchTab(1, document.querySelectorAll('.nav-item')[1]);
+        switchSubTab('blik');
+    }
+
+    // Symulacja Krypto na żywo
+    function startBtcSimulation() {
+        setInterval(() => {
+            const change = (Math.random() - 0.5) * 5000;
+            btcPrice += change;
+            priceHistory.push({ price: btcPrice, isUp: change >= 0 });
+            if(priceHistory.length > 20) priceHistory.shift();
+            
+            const priceEl = document.getElementById('btc-price');
+            const trendEl = document.getElementById('btc-trend');
+            if(priceEl) priceEl.innerText = btcPrice.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " PLN";
+            if(trendEl) trendEl.innerText = change > 0 ? "↗" : "↘";
+            
+            updateCryptoUI();
+            updateChart();
+        }, 3000);
+    }
+
+    function updateChart() {
+        const container = document.getElementById('chart-container');
+        if(!container) return;
+        container.innerHTML = '';
+        priceHistory.forEach((item, index) => {
+            const bar = document.createElement('div');
+            const height = ((item.price - 270000) / 20000) * 50;
+            bar.style.height = Math.max(8, Math.min(50, height)) + 'px';
+            bar.style.width = '10px';
+            
+            let isGreen = item.isUp;
+            if(index === 0 && priceHistory.length > 1) {
+                isGreen = priceHistory[1].price >= item.price;
+            }
+            bar.style.background = isGreen ? '#00875a' : '#cc0000';
+            bar.style.borderRadius = '2px';
+            container.appendChild(bar);
+        });
+    }
+
+    function updateCryptoUI() {
+        const balEl = document.getElementById('crypto-balance');
+        const valEl = document.getElementById('crypto-value');
+        if(balEl) balEl.innerText = `Posiadasz: ${userBtc.toFixed(4)} BTC`;
+        if(valEl) valEl.innerText = `Wartość: ${(userBtc * btcPrice).toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} PLN`;
+    }
+
+    function tradeCrypto(type) {
+        if(type === 'buy') {
+            let input = prompt("Ile PLN chcesz wydać na BTC?", "1000");
+            if(input !== null) {
+                let amount = parseFloat(input.replace(',', '.'));
+                if(!isNaN(amount) && amount > 0) {
+                    if(userBalance >= amount) {
+                        userBalance -= amount;
+                        totalExpenses += amount;
+                        let boughtBtc = amount / btcPrice;
+                        userBtc += boughtBtc;
+                        
+                        transactions.unshift({
+                            title: "Zakup Kryptowaluty (BTC)",
+                            recipient: "Giełda Krypto",
+                            amount: `-${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
+                            rawAmount: amount,
+                            isPlus: false,
+                            date: "Przed chwilą",
+                            account: "Portfel Krypto"
+                        });
+                        saveState();
+                        updateBalanceUI();
+                        updateFinancesUI();
+                        updateCryptoUI();
+                        renderHistory();
+                        alert(`Zakupiono ${boughtBtc.toFixed(4)} BTC pomyślnie!`);
+                    } else {
+                        alert("Brak wystarczających środków na koncie.");
+                    }
+                } else {
+                    alert("Nieprawidłowa kwota.");
+                }
+            }
+        } else {
+            let input = prompt(`Ile BTC chcesz sprzedać? (Masz: ${userBtc.toFixed(4)})`, "0.01");
+            if(input !== null) {
+                let btcToSell = parseFloat(input.replace(',', '.'));
+                if(!isNaN(btcToSell) && btcToSell > 0) {
+                    if(btcToSell <= userBtc) {
+                        let gain = btcToSell * btcPrice;
+                        userBtc -= btcToSell;
+                        userBalance += gain;
+                        totalIncome += gain;
+                        
+                        transactions.unshift({
+                            title: "Sprzedaż Kryptowaluty (BTC)",
+                            recipient: "Giełda Krypto",
+                            amount: `+${gain.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`,
+                            rawAmount: gain,
+                            isPlus: true,
+                            date: "Przed chwilą",
+                            account: "Portfel Krypto"
+                        });
+                        saveState();
+                        updateBalanceUI();
+                        updateFinancesUI();
+                        updateCryptoUI();
+                        renderHistory();
+                        alert(`Sprzedano BTC za ${gain.toFixed(2)} PLN!`);
+                    } else {
+                        alert("Nie masz tylu BTC na sprzedaż.");
+                    }
+                } else {
+                    alert("Nieprawidłowa ilość.");
+                }
+            }
+        }
+    }
+
+    function buyCoffee() {
+        processExpense("Kawa na mieście", "Kawiarnia Centralna", 18.00);
+    }
+
+    function buyVip() {
+        if (userData.isVip) {
+            alert("Masz już aktywny status VIP!");
+            return;
+        }
+        if (userBalance < 120) {
+            alert("Brak środków!");
+            return;
+        }
+        processExpense("Subskrypcja mBank VIP", "Pakiet Prestiżowy", 120.00);
+        userData.isVip = true;
+        document.body.classList.add('vip-mode');
+        saveState();
+        alert("Gratulacje! Odblokowano status VIP i ekskluzywny złoty motyw.");
+    }
+
+    // Interaktywna Zdrapka
+    let scratchActive = false;
+    let scratchWonAmount = 0;
+    let scratchIsScratched = false;
+
+    function setupScratchCard() {
+        const canvas = document.getElementById('scratch-canvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = 260;
+        canvas.height = 120;
+
+        ctx.fillStyle = '#999999';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#444444';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('ZETRZYJ PALCEM LUB MYSZKĄ', canvas.width / 2, canvas.height / 2 + 5);
+
+        scratchActive = false;
+        scratchIsScratched = false;
+    }
+
+    function initNewScratch() {
+        if (userBalance < 20) {
+            alert("Brak środków na zakup zdrapki (wymagane 20 PLN).");
+            return;
+        }
+        userBalance -= 20;
+        totalExpenses += 20;
+        updateBalanceUI();
+        updateFinancesUI();
+
+        transactions.unshift({
+            title: "Zakup Zdrapki mBank",
+            recipient: "mBank Gaming",
+            amount: "-20,00 PLN",
+            rawAmount: 20,
+            isPlus: false,
+            date: "Przed chwilą",
+            account: "Konto główne"
+        });
+        saveState();
+        renderHistory();
+
+        scratchStreak++;
+        
+        let isGuaranteedWin = (scratchStreak % 10 === 0);
+        let isLuckyWin = Math.random() < 0.20; 
+        
+        if (isGuaranteedWin || isLuckyWin) {
+            let rewards = [50, 100, 200, 500];
+            scratchWonAmount = rewards[Math.floor(Math.random() * rewards.length)];
+            document.getElementById('scratch-result-text').innerText = `+${scratchWonAmount} PLN`;
+        } else {
+            scratchWonAmount = 0;
+            document.getElementById('scratch-result-text').innerText = `NIC NIE WYGRAŁEŚ`;
+        }
+
+        setupScratchCard();
+        scratchActive = true;
+        updateScratchCounterUI();
+        saveState();
+    }
+
+    let isDrawing = false;
+
+    function getMousePos(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left,
+            y: (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('scratch-canvas');
+        if(canvas) {
+            const scratchMove = (e) => {
+                if (!isDrawing || !scratchActive) return;
+                e.preventDefault();
+                const ctx = canvas.getContext('2d');
+                const pos = getMousePos(e, canvas);
+
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 22, 0, Math.PI * 2, false);
+                ctx.fill();
+
+                checkScratchProgress(canvas);
+            };
+
+            const startDrawing = (e) => {
+                if (!scratchActive) {
+                    alert("Najpierw kup nową zdrapkę przyciskiem poniżej!");
+                    return;
+                }
+                isDrawing = true;
+                scratchMove(e);
+            };
+
+            const stopDrawing = () => { isDrawing = false; };
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', scratchMove);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            canvas.addEventListener('touchstart', startDrawing);
+            canvas.addEventListener('touchmove', scratchMove);
+            canvas.addEventListener('touchend', stopDrawing);
+        }
+    });
+
+    function checkScratchProgress(canvas) {
+        if (scratchIsScratched) return;
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        let pixels = imageData.data;
+        let transparentPixels = 0;
+
+        for (let i = 3; i < pixels.length; i += 4) {
+            if (pixels[i] === 0) transparentPixels++;
+        }
+
+        let percentage = (transparentPixels / (pixels.length / 4)) * 100;
+        if (percentage > 45) {
+            scratchIsScratched = true;
+            scratchActive = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (scratchWonAmount > 0) {
+                userBalance += scratchWonAmount;
+                totalIncome += scratchWonAmount;
+                updateBalanceUI();
+                updateFinancesUI();
+
+                transactions.unshift({
+                    title: "Wygrana w Zdrapce!",
+                    recipient: "mBank Gaming",
+                    amount: `+${scratchWonAmount.toFixed(2)} PLN`,
+                    rawAmount: scratchWonAmount,
+                    isPlus: true,
+                    date: "Przed chwilą",
+                    account: "Konto główne"
+                });
+                saveState();
+                renderHistory();
+                alert(`Wygrałeś ${scratchWonAmount} PLN!`);
+            } else {
+                alert("Niestety ta zdrapka była pusta. Spróbuj kolejnej!");
+            }
+        }
+    }
+
+    // --- KÓŁKO I KRZYŻYK (Zbalansowane AI - można wygrać) ---
+    function startNewTttGame() {
+        if (userBalance < 10) {
+            alert("Brak środków na wpisowe (wymagane 10 PLN).");
+            return;
+        }
+        userBalance -= 10;
+        totalExpenses += 10;
+        updateBalanceUI();
+        updateFinancesUI();
+
+        transactions.unshift({
+            title: "Wpisowe: Kółko i Krzyżyk",
+            recipient: "mBank Gaming",
+            amount: "-10,00 PLN",
+            rawAmount: 10,
+            isPlus: false,
+            date: "Przed chwilą",
+            account: "Konto główne"
+        });
+        saveState();
+        renderHistory();
+
+        tttBoard = ["", "", "", "", "", "", "", "", ""];
+        tttGameActive = true;
+        tttPlayerTurn = true;
+        document.getElementById('ttt-status-text').innerText = "Twój ruch (X)";
+        renderTttBoard();
+    }
+
+    function renderTttBoard() {
+        const cells = document.querySelectorAll('.ttt-cell');
+        cells.forEach((cell, index) => {
+            if (tttBoard[index] === "X") {
+                cell.innerHTML = '<svg class="icon-svg large" style="stroke:var(--mbank-red);" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+            } else if (tttBoard[index] === "O") {
+                cell.innerHTML = '<svg class="icon-svg large" style="stroke:var(--mbank-text);" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg>';
+            } else {
+                cell.innerHTML = '';
+            }
+        });
+    }
+
+    function makeTttMove(index) {
+        if (!tttGameActive || !tttPlayerTurn || tttBoard[index] !== "") return;
+
+        tttBoard[index] = "X";
+        renderTttBoard();
+
+        if (checkTttWinForPlayer(tttBoard, "X")) {
+            endTttGame("win");
+            return;
+        }
+        if (tttBoard.every(cell => cell !== "")) {
+            endTttGame("draw");
+            return;
+        }
+
+        tttPlayerTurn = false;
+        document.getElementById('ttt-status-text').innerText = "Komputer myśli (O)...";
+        
+        setTimeout(botTttMove, 500);
+    }
+
+    function botTttMove() {
+        if (!tttGameActive) return;
+
+        let move = null;
+
+        // 1. Sprawdź czy komputer może wygrać w tym ruchu
+        for (let i = 0; i < 9; i++) {
+            if (tttBoard[i] === "") {
+                tttBoard[i] = "O";
+                if (checkTttWinForPlayer(tttBoard, "O")) { move = i; tttBoard[i] = ""; break; }
+                tttBoard[i] = "";
+            }
+        }
+
+        // 2. Jeśli nie, zablokuj gracza, ale z 40% szansą na pominięcie (dzięki czemu gra nie jest niemożliwa do wygrania)
+        if (move === null && Math.random() > 0.4) {
+            for (let i = 0; i < 9; i++) {
+                if (tttBoard[i] === "") {
+                    tttBoard[i] = "X";
+                    if (checkTttWinForPlayer(tttBoard, "X")) { move = i; tttBoard[i] = ""; break; }
+                    tttBoard[i] = "";
+                }
+            }
+        }
+
+        // 3. Jeśli nadal brak ruchu, wybierz losowy wolny kwadradrat
+        if (move === null) {
+            let available = [];
+            tttBoard.forEach((val, idx) => { if(val === "") available.push(idx); });
+            if (available.length > 0) {
+                move = available[Math.floor(Math.random() * available.length)];
+            }
+        }
+
+        if (move !== null) {
+            tttBoard[move] = "O";
+            renderTttBoard();
+        }
+
+        if (checkTttWinForPlayer(tttBoard, "O")) {
+            endTttGame("loss");
+            return;
+        }
+        if (tttBoard.every(cell => cell !== "")) {
+            endTttGame("draw");
+            return;
+        }
+
+        tttPlayerTurn = true;
+        document.getElementById('ttt-status-text').innerText = "Twój ruch (X)";
+    }
+
+    function checkTttWinForPlayer(boardArr, player) {
+        const winPatterns = [
+            [0,1,2], [3,4,5], [6,7,8], 
+            [0,3,6], [1,4,7], [2,5,8], 
+            [0,4,8], [2,4,6]           
+        ];
+        return winPatterns.some(pattern => {
+            return pattern.every(index => boardArr[index] === player);
+        });
+    }
+
+    function endTttGame(result) {
+        tttGameActive = false;
+        const statusEl = document.getElementById('ttt-status-text');
+
+        if (result === "win") {
+            statusEl.innerText = "Niesamowite! Wygrałeś 50 PLN!";
+            userBalance += 50;
+            totalIncome += 50;
+            updateBalanceUI();
+            updateFinancesUI();
+
+            transactions.unshift({
+                title: "Wygrana: Kółko i Krzyżyk",
+                recipient: "mBank Gaming",
+                amount: "+50,00 PLN",
+                rawAmount: 50,
+                isPlus: true,
+                date: "Przed chwilą",
+                account: "Konto główne"
+            });
+            saveState();
+            renderHistory();
+            alert("Gratulacje! Pokonałeś komputer i wygrałeś 50 PLN!");
+        } else if (result === "loss") {
+            statusEl.innerText = "Komputer wygrał. Spróbuj ponownie!";
+            alert("Komputer okazał się sprytniejszy! Spróbuj jeszcze raz.");
+        } else {
+            statusEl.innerText = "Remis! Wpisowe zwrócone.";
+            userBalance += 10;
+            totalExpenses -= 10;
+            updateBalanceUI();
+            updateFinancesUI();
+            
+            transactions.unshift({
+                title: "Zwrot wpisowego (Remis)",
+                recipient: "mBank Gaming",
+                amount: "+10,00 PLN",
+                rawAmount: 10,
+                isPlus: true,
+                date: "Przed chwilą",
+                account: "Konto główne"
+            });
+            saveState();
+            renderHistory();
+            alert("Remis! Zwrócono wpisowe 10 PLN.");
+        }
+    }
+    // --- KONIEC KÓŁKA I KRZYŻYKA ---
+
+    function processExpense(title, recipient, amount) {
+        if (userBalance < amount) {
+            alert("Brak wystarczających środków na koncie.");
+            return;
+        }
+        userBalance -= amount;
+        totalExpenses += amount;
+        updateBalanceUI();
+        updateFinancesUI();
+
+        const formattedAmount = `-${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
+        transactions.unshift({
+            title: title,
+            recipient: recipient,
+            amount: formattedAmount,
+            rawAmount: amount,
+            isPlus: false,
+            date: "Przed chwilą",
+            account: "Karta Mastercard (4021)"
+        });
+        saveState();
+        renderHistory();
+        alert(`Transakcja "${title}" opłacona pomyślnie!`);
+    }
+
+    function openProfileModal() {
+        document.getElementById('modal-title').innerText = "Profil użytkownika";
+        const bodyHtml = `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--mbank-border); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--mbank-red);" id="profile-modal-avatar">
+                    ${userData.avatarUrl && userData.avatarUrl.trim() !== "" ? `<img src="${userData.avatarUrl}" style="width:100%;height:100%;object-fit:cover;">` : '<svg class="icon-svg large" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>'}
+                </div>
+            </div>
+            
+            <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Wybierz zdjęcie z urządzenia</label>
+            <input type="file" id="profile-gallery-file" class="mb-input" accept="image/*" onchange="handleGalleryUpload(event)">
+
+            <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Lub wklej link do zdjęcia (URL)</label>
+            <input type="text" id="profile-input-avatar" class="mb-input" placeholder="https://example.com/zdjecie.jpg" value="${userData.avatarUrl}">
+
+            <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Imię i nazwisko</label>
+            <input type="text" id="profile-input-name" class="mb-input" value="${userData.name}">
+
+            <div class="modal-row" style="margin-top: 4px;"><span>Data urodzenia:</span><span>${userData.birthDate}</span></div>
+            <div class="modal-row"><span>PESEL:</span><span>${userData.pesel}</span></div>
+
+            <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer; margin-top: 6px;" onclick="saveProfileChanges()">Zapisz zmiany</button>
+        `;
+        document.getElementById('modal-body-content').innerHTML = bodyHtml;
+        document.getElementById('trans-modal').style.display = 'flex';
+    }
+
+    function handleGalleryUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 150;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                } else {
+                    if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                userData.avatarUrl = dataUrl;
+
+                const urlInput = document.getElementById('profile-input-avatar');
+                if (urlInput) urlInput.value = dataUrl;
+
+                const modalAvatar = document.getElementById('profile-modal-avatar');
+                if (modalAvatar) {
+                    modalAvatar.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function saveProfileChanges() {
+        const newName = document.getElementById('profile-input-name').value.trim();
+        const avatarUrlInput = document.getElementById('profile-input-avatar');
+        const newAvatar = avatarUrlInput ? avatarUrlInput.value.trim() : userData.avatarUrl;
+
+        if (!newName) {
+            alert("Imię i nazwisko nie może być puste.");
+            return;
+        }
+
+        userData.name = newName;
+        userData.avatarUrl = newAvatar;
+
+        cardData.debit.holder = newName;
+        cardData.credit.holder = newName;
+        document.getElementById('card-holder-debit').innerText = newName;
+        document.getElementById('card-holder-credit').innerText = newName;
+
+        saveState();
+        updateUserUI();
+        closeDetailsDirect();
+        alert("Profil został zaktualizowany!");
+    }
+
+    function showCardDetails(cardKey) {
+        const c = cardData[cardKey];
+        document.getElementById('modal-title').innerText = c.title;
+        const bodyHtml = `
+            <div class="modal-row"><span>Posiadacz karty:</span><span>${c.holder}</span></div>
+            <div class="modal-row"><span>PESEL:</span><span>${c.pesel}</span></div>
+            <div class="modal-row"><span>Data urodzenia:</span><span>${c.birthDate}</span></div>
+            <div class="modal-row"><span>Numer karty:</span><span style="font-family: monospace;">${c.number}</span></div>
+            <div class="modal-row"><span>Data ważności:</span><span>${c.expiry}</span></div>
+            <div class="modal-row"><span>Kod CVV / CVC:</span><span>${c.cvv}</span></div>
+            <div class="modal-row"><span>Dostępny limit:</span><span>${c.limit}</span></div>
+            <div class="modal-row"><span>Status karty:</span><span style="color: #00875a;">${c.status}</span></div>
+        `;
+        document.getElementById('modal-body-content').innerHTML = bodyHtml;
+        document.getElementById('trans-modal').style.display = 'flex';
+    }
+
+    function showTransactionDetails(title, recipient, amount, date, account) {
+        document.getElementById('modal-title').innerText = title;
+        const bodyHtml = `
+            <div class="modal-row"><span>Kwota:</span><span>${amount}</span></div>
+            <div class="modal-row"><span>Odbiorca / Nadawca:</span><span>${recipient}</span></div>
+            <div class="modal-row"><span>Numer konta / Metoda:</span><span>${account}</span></div>
+            <div class="modal-row"><span>Data i godzina:</span><span>${date}</span></div>
+        `;
+        document.getElementById('modal-body-content').innerHTML = bodyHtml;
+        document.getElementById('trans-modal').style.display = 'flex';
+    }
+
+    function closeDetails(e) {
+        if (e.target.id === 'trans-modal') {
+            document.getElementById('trans-modal').style.display = 'none';
+        }
+    }
+
+    function closeDetailsDirect() {
+        document.getElementById('trans-modal').style.display = 'none';
+    }
+
+    function handlePinInput(digit) {
+        if (currentPinInput.length < 4) {
+            currentPinInput += digit;
+            updatePinDots();
+        }
+        if (currentPinInput.length === 4) {
+            setTimeout(() => {
+                document.getElementById('auth-overlay').style.display = 'none';
+                startBlikTimer();
+            }, 300);
+        }
+    }
+
+    function backspacePin() {
+        if (currentPinInput.length > 0) {
+            currentPinInput = currentPinInput.slice(0, -1);
+            updatePinDots();
+        }
+    }
+
+    function resetPin() {
+        currentPinInput = "";
+        updatePinDots();
+    }
+
+    function updatePinDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById(`dot-${i}`);
+            if (i < currentPinInput.length) {
+                dot.classList.remove('empty');
+                dot.classList.add('filled');
+            } else {
+                dot.classList.remove('filled');
+                dot.classList.add('empty');
+            }
+        }
+    }
+
+    function promptAddMoney() {
+        let input = prompt("Wpisz kwotę przelewu przychodzącego (np. 500 lub 1500.50):", "200");
+        if (input !== null) {
+            let amount = parseFloat(input.replace(',', '.'));
+            if (!isNaN(amount) && amount > 0) {
+                userBalance += amount;
+                totalIncome += amount;
+                updateBalanceUI();
+                updateFinancesUI();
+                
+                const formattedAmount = `+${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
+                transactions.unshift({
+                    title: "Przelew przychodzący",
+                    recipient: `${userData.name} (Zasilenie zewnętrzne)`,
+                    amount: formattedAmount,
+                    rawAmount: amount,
+                    isPlus: true,
+                    date: "Przed chwilą",
+                    account: "PL 49 1140 2004 0000 3002 4511 8921"
+                });
+                saveState();
+                renderHistory();
+            } else {
+                alert("Podano nieprawidłową kwotę.");
+            }
+        }
+    }
+
+    function executeTransfer() {
+        const nameInput = document.getElementById('transfer-name').value.trim();
+        const accInput = document.getElementById('transfer-acc').value.trim() || "PL 11 2233 4455 6677 8899 0011 2233";
+        const amountInput = document.getElementById('transfer-amount').value.trim();
+        let amount = parseFloat(amountInput.replace(',', '.'));
+
+        if (!nameInput) {
+            alert("Podaj nazwę odbiorcy.");
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert("Podaj prawidłową kwotę przelewu.");
+            return;
+        }
+        if (amount > userBalance) {
+            alert("Brak wystarczających środków na koncie.");
+            return;
+        }
+
+        userBalance -= amount;
+        totalExpenses += amount;
+        updateBalanceUI();
+        updateFinancesUI();
+
+        const formattedAmount = `-${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN`;
+        transactions.unshift({
+            title: `Przelew do: ${nameInput}`,
+            recipient: nameInput,
+            amount: formattedAmount,
+            rawAmount: amount,
+            isPlus: false,
+            date: "Przed chwilą",
+            account: accInput
+        });
+        saveState();
+        renderHistory();
+
+        document.getElementById('transfer-name').value = '';
+        document.getElementById('transfer-acc').value = '';
+        document.getElementById('transfer-amount').value = '';
+        
+        alert("Przelew wychodzący został zrealizowany pomyślnie!");
+        switchTab(0, document.querySelectorAll('.nav-item')[0]);
+    }
+
+    function switchTab(index, element) {
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(tab => tab.classList.remove('active'));
+
+        const targets = ['tab-pulpit', 'tab-platnosci', 'tab-finanse', 'tab-gry', 'tab-sklep'];
+        document.getElementById(targets[index]).classList.add('active');
+        element.classList.add('active');
+    }
+
+    function generateNewBlikCode() {
+        const code = Math.floor(100000 + Math.random() * 900000);
+        const formatted = String(code).replace(/(\d{3})(\d{3})/, '$1 $2');
+        const el = document.getElementById('blik-code-display');
+        if (el) el.innerText = formatted;
+    }
+
+    function startBlikTimer() {
+        generateNewBlikCode();
+        let timeLeft = maxBlikTime;
+        const circle = document.getElementById('blik-progress-circle');
+        const textSec = document.getElementById('blik-sec-text');
+        const circumference = 2 * Math.PI * 20;
+
+        if (blikInterval) clearInterval(blikInterval);
+
+        blikInterval = setInterval(() => {
+            timeLeft--;
+            if (textSec) textSec.innerText = timeLeft;
+            if (circle) {
+                const offset = circumference - (timeLeft / maxBlikTime) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }
+            if (timeLeft <= 0) {
+                generateNewBlikCode();
+                timeLeft = maxBlikTime;
+            }
+        }, 1000);
+    }
+</script>
+
+</body>
+</html>
