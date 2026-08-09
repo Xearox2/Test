@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>mBank - Bankowość mobilna</title>
+    <style>
+        :root {
+            --mbank-red: #ec0028;
+            --mbank-red-dark: #cc0023;
+            --mbank-bg: #f3f3f3;
+            --mbank-card-bg: #ffffff;
+            --mbank-text: #1a1a1a;
+            --mbank-text-gray: #767676;
+            --mbank-border: #e0e0e0;
+            --radius-card: 16px;
+            --radius-btn: 12px;
+            --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+        }
+
+        body {
+            font-family: var(--font);
+            background-color: #121212;
+            color: var(--mbank-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 860px;
+            background-color: var(--mbank-bg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        @media (min-width: 420px) {
+            .phone-frame {
+                border-radius: 40px;
+                border: 10px solid #222;
+            }
+        }
+
+        /* Klasyczny nagłówek mBanku w kolorze głębokiej bieli z czerwonym akcentem */
+        .mb-header {
+            background-color: #ffffff;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--mbank-border);
+            z-index: 10;
+        }
+
+        .mb-logo {
+            font-weight: 900;
+            font-size: 22px;
+            color: var(--mbank-red);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .mb-logo span {
+            color: var(--mbank-text);
+        }
+
+        .mb-header-actions {
+            display: flex;
+            gap: 16px;
+            font-size: 18px;
+            color: var(--mbank-text);
+        }
+
+        /* Główny kontener aplikacji */
+        .mb-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 90px;
+            scrollbar-width: none;
+        }
+        .mb-content::-webkit-scrollbar { display: none; }
+
+        /* Panel stanu konta w stylu mBanku */
+        .account-card {
+            background-color: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 12px;
+            border: 1px solid rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .account-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: var(--mbank-red);
+        }
+
+        .acc-type {
+            font-size: 12px;
+            color: var(--mbank-text-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .acc-number-short {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+            margin-top: 2px;
+            font-family: monospace;
+        }
+
+        .acc-balance {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--mbank-text);
+            margin: 12px 0 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* Ikony skrótów pod saldem (mLinia, Przelew, BLIK, Doładowanie) */
+        .mb-shortcuts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .shortcut-btn {
+            background: var(--mbank-card-bg);
+            border: 1px solid var(--mbank-border);
+            border-radius: var(--radius-btn);
+            padding: 12px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .shortcut-btn:active {
+            background-color: #eaeaea;
+        }
+
+        .shortcut-icon {
+            font-size: 20px;
+            color: var(--mbank-red);
+        }
+
+        .shortcut-btn span:last-child {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--mbank-text);
+            text-align: center;
+        }
+
+        /* Sekcja kart płatniczych mBanku */
+        .section-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--mbank-text);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mb-card-slider {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+            margin-bottom: 16px;
+        }
+        .mb-card-slider::-webkit-scrollbar { display: none; }
+
+        .virtual-card {
+            min-width: 280px;
+            height: 165px;
+            border-radius: var(--radius-card);
+            background: linear-gradient(135deg, #2b2b2b 0%, #111111 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .virtual-card.red {
+            background: linear-gradient(135deg, #ec0028 0%, #900018 100%);
+        }
+
+        .vcard-top {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.85;
+            text-transform: uppercase;
+        }
+
+        .vcard-number {
+            font-family: monospace;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .vcard-bottom {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        /* Historia transakcji w stylu mBanku */
+        .history-box {
+            background: var(--mbank-card-bg);
+            border-radius: var(--radius-card);
+            padding: 4px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+        }
+
+        .trans-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--mbank-border);
+        }
+        .trans-item:last-child { border-bottom: none; }
+
+        .trans-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--mbank-text);
+        }
+        .trans-sub {
+            font-size: 11px;
+            color: var(--mbank-text-gray);
+            margin-top: 2px;
+        }
+
+        .trans-sum {
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .trans-sum.plus { color: #00875a; }
+        .trans-sum.minus { color: var(--mbank-text); }
+
+        /* Formularz przelewu i karty w sekcji płatności */
+        .mb-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--mbank-border);
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+        .mb-input:focus {
+            border-color: var(--mbank-red);
+            outline: none;
+        }
+
+        /* Licznik i wyświetlacz BLIK (2 minuty) */
+        .blik-display-card {
+            text-align: center;
+            padding: 24px 20px;
+            background: white;
+            border-radius: var(--radius-card);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.04);
+            margin-top: 10px;
+        }
+        .blik-code-text {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--mbank-red);
+            letter-spacing: 4px;
+            margin: 12px 0;
+            font-family: monospace;
+        }
+        .blik-timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        .blik-circle-timer {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .blik-circle-timer svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .blik-circle-timer circle {
+            fill: none;
+            stroke-width: 3.5;
+        }
+        .blik-circle-timer .bg-circle {
+            stroke: #eee;
+        }
+        .blik-circle-timer .progress-circle {
+            stroke: var(--mbank-red);
+            stroke-dasharray: 125.6;
+            stroke-dashoffset: 0;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        .blik-seconds-text {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--mbank-text);
+        }
+
+        /* Dolny pasek nawigacji charakterystyczny dla nowej aplikacji mBanku */
+        .mb-navbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: #ffffff;
+            border-top: 1px solid var(--mbank-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--mbank-text-gray);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--mbank-red);
+        }
+
+        .nav-item span:first-child {
+            font-size: 20px;
+        }
+
+        /* Ekran logowania/autoryzacji */
+        #auth-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: #ffffff;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .auth-logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--mbank-red);
+            margin-bottom: 6px;
+            letter-spacing: -1px;
+        }
+        .auth-logo span { color: #111; }
+
+        .auth-avatar {
+            width: 72px;
+            height: 72px;
+            background-color: #f0f0f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 24px 0 12px;
+            color: #444;
+            border: 2px solid var(--mbank-border);
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        .pin-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--mbank-red);
+            background-color: transparent;
+        }
+        .pin-dot.filled {
+            background-color: var(--mbank-red);
+        }
+        .pin-dot.empty {
+            background-color: transparent;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 260px;
+        }
+
+        .key-btn {
+            background: #f7f7f7;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--mbank-text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .key-btn:active { background: #e0e0e0; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+    <!-- EKRAN LOGOWANIA / PIN (Wzorowany na mBanku) -->
+    <div id="auth-overlay">
+        <div class="auth-logo">m<span>Bank</span></div>
+        <p style="font-size: 13px; color: var(--mbank-text-gray);">Witaj, Jan Kowalski</p>
+        
+        <div class="auth-avatar">👤</div>
+        <p style="font-size: 12px; font-weight: 600;">Wpisz PIN do aplikacji</p>
+
+        <div class="pin-dots">
+            <div class="pin-dot empty" id="dot-0"></div>
+            <div class="pin-dot empty" id="dot-1"></div>
+            <div class="pin-dot empty" id="dot-2"></div>
+            <div class="pin-dot empty" id="dot-3"></div>
+        </div>
+
+        <div class="keypad">
+            <button class="key-btn" onclick="handlePinInput('1')">1</button>
+            <button class="key-btn" onclick="handlePinInput('2')">2</button>
+            <button class="key-btn" onclick="handlePinInput('3')">3</button>
+            <button class="key-btn" onclick="handlePinInput('4')">4</button>
+            <button class="key-btn" onclick="handlePinInput('5')">5</button>
+            <button class="key-btn" onclick="handlePinInput('6')">6</button>
+            <button class="key-btn" onclick="handlePinInput('7')">7</button>
+            <button class="key-btn" onclick="handlePinInput('8')">8</button>
+            <button class="key-btn" onclick="handlePinInput('9')">9</button>
+            <button class="key-btn" style="background:transparent;" onclick="resetPin()"></button>
+            <button class="key-btn" onclick="handlePinInput('0')">0</button>
+            <button class="key-btn" style="background:transparent; font-size: 16px;" onclick="backspacePin()">⌫</button>
+        </div>
+    </div>
+
+    <!-- NAGŁÓWEK APLIKACJI -->
+    <header class="mb-header">
+        <div class="mb-logo">m<span>Bank</span></div>
+        <div class="mb-header-actions">
+            <span>🔍</span>
+            <span>💬</span>
+        </div>
+    </header>
+
+    <!-- ZAWARTOŚĆ -->
+    <div class="mb-content">
+
+        <!-- PULPIT -->
+        <div id="tab-pulpit" class="view-section active">
+            
+            <div class="account-card">
+                <div class="acc-type">eKonto osobiste</div>
+                <div class="acc-number-short">PL 49 1140 2004 0000 3002 4511 8921</div>
+                <div class="acc-balance" id="balance-display">14 250,80 PLN</div>
+            </div>
+
+            <!-- Skróty operacji mBanku -->
+            <div class="mb-shortcuts">
+                <button class="shortcut-btn" onclick="switchTab(1, document.querySelectorAll('.nav-item')[1])">
+                    <span class="shortcut-icon">💸</span>
+                    <span>Przelew</span>
+                </button>
+                <button class="shortcut-btn" onclick="openBlikTab()">
+                    <span class="shortcut-icon">📱</span>
+                    <span>BLIK</span>
+                </button>
+                <button class="shortcut-btn" onclick="promptAddMoney()">
+                    <span class="shortcut-icon">⚡</span>
+                    <span>Doładuj</span>
+                </button>
+                <button class="shortcut-btn" onclick="switchTab(3, document.querySelectorAll('.nav-item')[3])">
+                    <span class="shortcut-icon">❖</span>
+                    <span>Więcej</span>
+                </button>
+            </div>
+
+            <div class="section-header">Twoje karty</div>
+            <div class="mb-card-slider">
+                <div class="virtual-card red">
+                    <div class="vcard-top">
+                        <span>Debetowa Mastercard</span>
+                        <span>PLN</span>
+                    </div>
+                    <div class="vcard-number">5392 •••• •••• 4021</div>
+                    <div class="vcard-bottom">
+                        <span>Jan Kowalski</span>
+                        <span>08/29</span>
+                    </div>
+                </div>
+                <div class="virtual-card">
+                    <div class="vcard-top">
+                        <span>Kredytowa Visa</span>
+                        <span>EUR</span>
+                    </div>
+                    <div class="vcard-number">4211 •••• •••• 9910</div>
+                    <div class="vcard-bottom">
+                        <span>Jan Kowalski</span>
+                        <span>01/27</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <span>Historia</span>
+                <span style="font-size: 11px; color: var(--mbank-red); font-weight: 600; cursor: pointer;">Wszystkie</span>
+            </div>
+            
+            <div class="history-box" id="history-container">
+                <div class="trans-item">
+                    <div>
+                        <div class="trans-title">Biedronka #412</div>
+                        <div class="trans-sub">Karta 4021 • Dzisiaj, 13:20</div>
+                    </div>
+                    <div class="trans-sum minus">-45,20 PLN</div>
+                </div>
+                <div class="trans-item">
+                    <div>
+                        <div class="trans-title">Wynagrodzenie za pracę</div>
+                        <div class="trans-sub">Przelew przychodzący • Wczoraj</div>
+                    </div>
+                    <div class="trans-sum plus">+6 800,00 PLN</div>
+                </div>
+                <div class="trans-item">
+                    <div>
+                        <div class="trans-title">Allegro.pl</div>
+                        <div class="trans-sub">BLIK • 3 dni temu</div>
+                    </div>
+                    <div class="trans-sum minus">-129,99 PLN</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- PŁATNOŚCI -->
+        <div id="tab-platnosci" class="view-section">
+            <div class="section-header">Przelew na konto</div>
+            <div class="account-card">
+                <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Odbiorca</label>
+                <input type="text" id="transfer-name" class="mb-input" placeholder="np. Jan Nowak">
+                
+                <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Numer konta</label>
+                <input type="text" id="transfer-acc" class="mb-input" placeholder="PL 00 0000 0000 0000 0000 0000">
+                
+                <label style="font-size: 11px; color: var(--mbank-text-gray); font-weight: 600;">Kwota (PLN)</label>
+                <input type="number" id="transfer-amount" class="mb-input" placeholder="0.00">
+
+                <button style="width: 100%; background: var(--mbank-red); color: white; border: none; padding: 12px; border-radius: var(--radius-btn); font-weight: 600; cursor: pointer;" onclick="executeTransfer()">Wyślij przelew</button>
+            </div>
+
+            <!-- Kod BLIK z czasem 2 minuty -->
+            <div class="section-header" style="margin-top: 16px;">Kod BLIK</div>
+            <div class="blik-display-card">
+                <p style="font-size: 11px; color: var(--mbank-text-gray);">Jednorazowy kod do płatności</p>
+                <div class="blik-code-text" id="blik-code-display">739 104</div>
+                <div class="blik-timer-container">
+                    <div class="blik-circle-timer">
+                        <svg viewBox="0 0 50 50">
+                            <circle class="bg-circle" cx="25" cy="25" r="20"></circle>
+                            <circle class="progress-circle" id="blik-progress-circle" cx="25" cy="25" r="20"></circle>
+                        </svg>
+                        <div class="blik-seconds-text" id="blik-sec-text">120</div>
+                    </div>
+                    <span style="font-size: 11px; color: var(--mbank-text-gray);">Ważność kodu (2 min)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANSE / KONTROLER -->
+        <div id="tab-finanse" class="view-section">
+            <div class="section-header">Moje finanse</div>
+            <div class="account-card">
+                <div class="acc-type">Wydatki w tym miesiącu</div>
+                <div class="acc-balance" style="font-size: 26px;">2 410,50 PLN</div>
+                <div style="background: #e5e5e5; height: 6px; border-radius: 3px; margin-top: 14px; overflow: hidden;">
+                    <div style="width: 45%; background: var(--mbank-red); height: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USŁUGI -->
+        <div id="tab-uslugi" class="view-section">
+            <div class="section-header">Usługi i wnioski</div>
+            <div class="account-card" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 13px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid var(--mbank-border);">Wniosek o pożyczkę gotówkową</div>
+                <div style="font-size: 13px; font-weight: 600; padding: 8px 0; border-bottom: 1px solid var(--mbank-border);">Ubezpieczenia podróżne</div>
+                <div style="font-size: 13px; font-weight: 600; padding: 8px 0; color: var(--mbank-red); cursor: pointer;" onclick="location.reload()">Zablokuj aplikację / Wyloguj</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- DOLNA NAWIGACJA (Standard nowego mBanku) -->
+    <nav class="mb-navbar">
+        <button class="nav-item active" onclick="switchTab(0, this)">
+            <span>🏠</span>
+            Pulpit
+        </button>
+        <button class="nav-item" onclick="switchTab(1, this)">
+            <span>💸</span>
+            Płatności
+        </button>
+        <button class="nav-item" onclick="switchTab(2, this)">
+            <span>📊</span>
+            Finanse
+        </button>
+        <button class="nav-item" onclick="switchTab(3, this)">
+            <span>✨</span>
+            Usługi
+        </button>
+    </nav>
+
+</div>
+
+<script>
+    let currentPinInput = "";
+    let userBalance = 14250.80;
+    let blikInterval = null;
+    const maxBlikTime = 120; // 2 minuty (120 sekund)
+
+    // --- LOGOWANIE PIN ---
+    function handlePinInput(digit) {
+        if (currentPinInput.length < 4) {
+            currentPinInput += digit;
+            updatePinDots();
+        }
+        if (currentPinInput.length === 4) {
+            setTimeout(() => {
+                document.getElementById('auth-overlay').style.display = 'none';
+                startBlikTimer();
+            }, 300);
+        }
+    }
+
+    function backspacePin() {
+        if (currentPinInput.length > 0) {
+            currentPinInput = currentPinInput.slice(0, -1);
+            updatePinDots();
+        }
+    }
+
+    function resetPin() {
+        currentPinInput = "";
+        updatePinDots();
+    }
+
+    function updatePinDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById(`dot-${i}`);
+            if (i < currentPinInput.length) {
+                dot.classList.remove('empty');
+                dot.classList.add('filled');
+            } else {
+                dot.classList.remove('filled');
+                dot.classList.add('empty');
+            }
+        }
+    }
+
+    // --- DOŁADOWANIE WŁASNĄ KWOTĄ ---
+    function promptAddMoney() {
+        let input = prompt("Wpisz kwotę doładowania (np. 500 lub 1500.50):", "200");
+        if (input !== null) {
+            let amount = parseFloat(input.replace(',', '.'));
+            if (!isNaN(amount) && amount > 0) {
+                userBalance += amount;
+                document.getElementById('balance-display').innerText = userBalance.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+                
+                const historyBox = document.getElementById('history-container');
+                const newTrans = document.createElement('div');
+                newTrans.className = 'trans-item';
+                newTrans.innerHTML = `
+                    <div>
+                        <div class="trans-title">Doładowanie konta</div>
+                        <div class="trans-sub">Zasilenie własne • Przed chwilą</div>
+                    </div>
+                    <div class="trans-sum plus">+${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</div>
+                `;
+                historyBox.prepend(newTrans);
+            } else {
+                alert("Podano nieprawidłową kwotę.");
+            }
+        }
+    }
+
+    // --- WYKONANIE PRZELEWU NA KONTO ---
+    function executeTransfer() {
+        const nameInput = document.getElementById('transfer-name').value.trim();
+        const amountInput = document.getElementById('transfer-amount').value.trim();
+        let amount = parseFloat(amountInput.replace(',', '.'));
+
+        if (!nameInput) {
+            alert("Podaj nazwę odbiorcy.");
+            return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+            alert("Podaj prawidłową kwotę przelewu.");
+            return;
+        }
+        if (amount > userBalance) {
+            alert("Brak wystarczających środków na koncie.");
+            return;
+        }
+
+        // Aktualizacja salda
+        userBalance -= amount;
+        document.getElementById('balance-display').innerText = userBalance.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " PLN";
+
+        // Dodanie do historii transakcji
+        const historyBox = document.getElementById('history-container');
+        const newTrans = document.createElement('div');
+        newTrans.className = 'trans-item';
+        newTrans.innerHTML = `
+            <div>
+                <div class="trans-title">Przelew do: ${nameInput}</div>
+                <div class="trans-sub">Przelew krajowy • Przed chwilą</div>
+            </div>
+            <div class="trans-sum minus">-${amount.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PLN</div>
+        `;
+        historyBox.prepend(newTrans);
+
+        // Czyszczenie formularza i powrót na pulpit
+        document.getElementById('transfer-name').value = '';
+        document.getElementById('transfer-acc').value = '';
+        document.getElementById('transfer-amount').value = '';
+        
+        alert("Przelew został zrealizowany pomyślnie!");
+        switchTab(0, document.querySelectorAll('.nav-item')[0]);
+    }
+
+    // --- NAWIGACJA ---
+    function switchTab(index, element) {
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(tab => tab.classList.remove('active'));
+
+        const targets = ['tab-pulpit', 'tab-platnosci', 'tab-finanse', 'tab-uslugi'];
+        document.getElementById(targets[index]).classList.add('active');
+        element.classList.add('active');
+    }
+
+    function openBlikTab() {
+        switchTab(1, document.querySelectorAll('.nav-item')[1]);
+        generateNewBlikCode();
+    }
+
+    // --- BLIK Z LICZNIKIEM OKRĄGŁYM (2 MINUTY) ---
+    function generateNewBlikCode() {
+        const code = Math.floor(100000 + Math.random() * 900000);
+        const formatted = String(code).replace(/(\d{3})(\d{3})/, '$1 $2');
+        const el = document.getElementById('blik-code-display');
+        if (el) el.innerText = formatted;
+    }
+
+    function startBlikTimer() {
+        generateNewBlikCode();
+        let timeLeft = maxBlikTime;
+        const circle = document.getElementById('blik-progress-circle');
+        const textSec = document.getElementById('blik-sec-text');
+        const circumference = 2 * Math.PI * 20; // r = 20
+
+        if (blikInterval) clearInterval(blikInterval);
+
+        blikInterval = setInterval(() => {
+            timeLeft--;
+            
+            if (textSec) textSec.innerText = timeLeft;
+
+            if (circle) {
+                const offset = circumference - (timeLeft / maxBlikTime) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }
+
+            if (timeLeft <= 0) {
+                generateNewBlikCode();
+                timeLeft = maxBlikTime;
+            }
+        }, 1000);
+    }
+</script>
+
+</body>
+</html>
